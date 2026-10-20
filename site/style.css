@@ -11,3 +11,49 @@
 .contract-address button { padding: 10px; font-size: .7rem; }
 .grid-two > *, .hero > *, .wallet-address { min-width: 0; }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* Hosting review: retain the terminal theme with six readable type roles. */
+:root {
+  --text-caption: .75rem;
+  --text-ui: .875rem;
+  --text-body: 1rem;
+  --text-heading: 1.125rem;
+  --text-brand: 1.5rem;
+  --text-display: clamp(2rem, 4.6vw, 3.75rem);
+  font-size: 16px;
+}
+h1 { font-size: var(--text-display); text-wrap: balance; }
+h2 { font-size: var(--text-heading); }
+h3, .intro { font-size: var(--text-body); }
+.brand { font-size: var(--text-brand); }
+button, label, nav a, .panel p, .wallet .wallet-address, output, details summary {
+  font-size: var(--text-ui);
+}
+.badge, .hero-tags span, .hero-art span, .small, .panel .small, .ticker,
+.wallet .balance, .wallet-id, .stats span, .stats small, dt,
+#network-name, .transaction-status, footer strong, footer p, footer a,
+pre, code, .contract-address button { font-size: var(--text-caption); }
+.stats strong { font-size: var(--text-brand); }
+.hero-tags span, .badge, .hero-art span, footer strong { letter-spacing: .03em; }
+.hero-art span { line-height: 1.6; }
+button { max-width: 100%; overflow-wrap: anywhere; }
+input, select, textarea { min-width: 0; font-size: var(--text-body); }
+input[type=file] { font-size: var(--text-body); }
+input::placeholder, textarea::placeholder { opacity: 1; }
+p { max-width: 75ch; }
+.wallet-address, .stats, output, #nav-count { font-variant-numeric: tabular-nums; }
+nav { overflow: visible; }
+/* Updates stay in the document flow and cannot cover the next control. */
+#notice { position: static; }
+dialog { overscroll-behavior: contain; }
+@media (max-width: 750px) {
+  .brand { font-size: var(--text-brand); }
+  .hero { min-height: 180px; margin-bottom: 24px; }
+  .hero h1, .section-heading h1 { font-size: 2rem; letter-spacing: -.04em; }
+  .hero-tags { margin-top: 16px; gap: 8px; }
+  .hero-tags span, .hero-art span, .badge { font-size: var(--text-caption); }
+  nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  nav a { font-size: var(--text-caption); padding: 16px 3px; text-align: center; }
+  .wallet .wallet-address { font-size: var(--text-ui); }
+  .ticker { font-size: var(--text-caption); }
+}

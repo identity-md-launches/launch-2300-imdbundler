@@ -9,7 +9,36 @@ A static multi-wallet workbench and an immutable IMDB / IMD Uniswap v4 buyback-a
 | IMDB | [`0x9a26dcb2bbd88d4c964043f2611d6cb0031c1ee8`](https://etherscan.io/address/0x9a26dcb2bbd88d4c964043f2611d6cb0031c1ee8) |
 | Hook | [`0x736361f1ffa0f2407724589addcde144f047a0cc`](https://etherscan.io/address/0x736361f1ffa0f2407724589addcde144f047a0cc) |
 
-Contract source remains unchanged. The launch source is already in [the launch repository](https://github.com/identity-md-launches/launch-2300-imdbundler/tree/864305f630ca6ea7d49f3a7f6120f299386f94aa). This follow-up supplies an updated static site and reproducible IPFS CAR; publishing this revision, pinning it, and activating **imdbundler.sites.imd.fun** remain the network publisher's steps. The domain returned HTTP 404 during this assignment; a locally generated CID is not a hosted site.
+Contract source remains unchanged. The launch source is already in [the launch repository](https://github.com/identity-md-launches/launch-2300-imdbundler/tree/864305f630ca6ea7d49f3a7f6120f299386f94aa).
+
+**Hosting follow-up, 2026-10-20: incomplete.** The production export is in `dist/`, with its matching CAR in `release/imdbundler.car`. The authorized publishing command `imd site publish dist --name imdbundler` was attempted and exited 1: `not configured — run: imd pair --server <url>`. No pin or label activation was acknowledged. The public URL returned HTTP 404 / “No such site.” This is a prepared release, not a live-site claim. No credentials, pairing, contract changes, redeployment, or transactions were attempted.
+
+## Install, rebuild and preview the production export
+
+The existing vanilla JavaScript application and local runtime assets remain in `site/`. No runtime dependency installation is needed. The additional hosting tools have their own manifest and lockfile in `web/`; the original root manifest and build configuration are unchanged.
+
+```sh
+# Production export + deterministic IPFS CAR, using Node 22+ only:
+node web/build.mjs
+# Preview the actual export at http://127.0.0.1:4173/preview/:
+node web/preview.mjs
+
+# Install the optional development/checking tools, then check them:
+npm ci --prefix web --ignore-scripts
+npm run typecheck --prefix web
+npm test
+# Browser binaries and their system libraries must also be installed:
+npm exec --prefix web -- playwright install chromium webkit
+npm run validate --prefix web
+# Explicit Chromium-only check when WebKit's system libraries are unavailable:
+npm run validate --prefix web -- --chromium
+```
+
+`npm run build --prefix web` is equivalent to `node web/build.mjs`. It replaces `dist/` with a byte-for-byte copy of `site/`, including local Ethers, eight frog SVGs, licenses, deployment metadata, and the PNG share image, and regenerates `release/`. Hash routes and relative runtime URLs work under a gateway subpath. The absolute Open Graph image URL intentionally targets the requested public domain.
+
+On an **already authorized publisher**, `imd site publish dist --name imdbundler` bundles/pins the export and requests the label. After success, compare the returned CID to `release/cid.txt`, check publisher status, and verify the public HTTPS page and assets. Creating a CAR or a CID alone is insufficient. Do not include `web/node_modules/`, browser caches or temporary test files in a source submission.
+
+Actual checks: production build passed; strict typecheck of the new hosting scripts passed; all **30 existing tests passed**; Chromium passed the primary interaction suite and five-page reflow checks at **320, 390, 750, 1024 and 1440px**. The design probe passed **13/16**, with deliberate terminal casing/monospace and a navigation false positive documented. WebKit could not launch because required system libraries are absent. A full strict JavaScript check of the legacy app and minified Ethers does not pass; the successful hosting typecheck does not cover that legacy code. Read [validation and limitations](docs/VALIDATION.md), [implemented design](DESIGN.md), and [browser evidence](docs/site-review/) for details. These are worker observations, not independent certification.
 
 ## Run and check
 

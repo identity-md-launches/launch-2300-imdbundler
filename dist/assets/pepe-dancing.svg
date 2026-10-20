@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="dancing frog">
+<title>Dancing frog — original imdbundler artwork</title>
+<g fill="#000" stroke="#00ff00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M56 290 Q54 233 91 222 L208 222 Q250 236 248 290Z"/>
+<path d="M60 128 Q54 80 83 69 Q112 39 148 71 Q186 39 217 69 Q248 82 239 131 Q266 156 241 199 Q210 232 150 234 Q86 235 59 203 Q31 163 60 128Z"/>
+<ellipse cx="113" cy="105" rx="35" ry="33"/><ellipse cx="185" cy="103" rx="36" ry="34"/><path d="M92 110 Q112 83 132 108 M165 108 Q185 81 205 105"/><path d="M65 146 Q77 133 91 143 M209 141 Q224 131 238 144"/><path d="M79 163 Q151 190 226 159 Q218 218 152 219 Q95 215 79 163Z"/><path d="M106 199 Q150 181 195 201"/><path d="M61 238 L28 191 L14 148 M239 238 L269 183 L288 142 M20 144 L6 128 M20 144 L34 129 M281 144 L295 130 M281 144 L270 128 M247 74 L253 52 L277 46 L272 69"/><circle cx="244" cy="77" r="7" fill="#00ff00"/><circle cx="266" cy="73" r="7" fill="#00ff00"/>
+</g></svg>

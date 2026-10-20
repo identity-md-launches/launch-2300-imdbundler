@@ -8,6 +8,15 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
   <meta name="description" content="Your wallets. Your browser. Generate wallets, encrypt backups, and prepare individual token or NFT transactions with imdbundler.">
   <title>imdbundler // your wallets. your browser.</title>
+  <meta property="og:title" content="imdbundler // your wallets. your browser.">
+  <meta property="og:description" content="Generate wallets, encrypt backups, prepare token or NFT transactions, and download a Pepe P&amp;L card. Fully client-side.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://imdbundler.sites.imd.fun/">
+  <meta property="og:image" content="https://imdbundler.sites.imd.fun/assets/share.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="imdbundler wallet workbench with a lime-green Pepe on black">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="./assets/pepe-sunglasses.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.js"></script>
@@ -19,14 +28,14 @@
   <span class="badge">100% CLIENT-SIDE</span>
 </header>
 <nav aria-label="Main navigation">
-  <a href="#home" data-page="home">01 / Home</a><a href="#manage" data-page="manage">02 / Manage <span id="nav-count">0</span></a>
-  <a href="#snipe" data-page="snipe">03 / Snipe</a><a href="#pnl" data-page="pnl">04 / P&amp;L</a><a href="#token" data-page="token">05 / IMDB</a>
+  <a href="#home" data-page="home">Home</a><a href="#manage" data-page="manage">Manage <span id="nav-count">0</span></a>
+  <a href="#snipe" data-page="snipe">Snipe</a><a href="#pnl" data-page="pnl">P&amp;L</a><a href="#token" data-page="token">IMDB</a>
 </nav>
 <main id="main">
 <div id="notice" role="status" aria-live="polite" hidden></div>
 <section id="home" class="page">
   <div class="hero">
-    <div><p class="eyebrow">A SMALL TERMINAL FOR BIG PLANS</p><h1>MORE WALLETS.<br>YOUR CONTROL<span class="cursor">_</span></h1>
+    <div><h1>MORE WALLETS.<br>YOUR CONTROL<span class="cursor">_</span></h1>
     <p class="intro">Generate a fleet. Prepare your next move.<br>Your keys stay in this browser.</p>
     <div class="hero-tags"><span>NO SIGN-IN</span><span>NO AUTO-CONNECT</span><span>NO KEY SERVER</span></div></div>
     <div class="hero-art"><img src="./assets/pepe-sunglasses.svg" width="300" height="300" alt="A lime frog wearing sunglasses"><span>[ READY WHEN YOU ARE ]</span></div>
@@ -47,7 +56,7 @@
   <div class="ticker" aria-label="Your security workflow"><span>01 GENERATE</span><span>→</span><span>02 ENCRYPT &amp; BACK UP</span><span>→</span><span>03 PREPARE</span><span>→</span><span>04 REVIEW &amp; SIGN</span></div>
 </section>
 <section id="manage" class="page" hidden>
-  <div class="section-heading"><div><p class="eyebrow">YOUR FLEET / YOUR CUSTODY</p><h1>Wallet terminal<span class="cursor">_</span></h1></div><img src="./assets/pepe-focused.svg" width="110" height="110" alt="Focused frog at a laptop"></div>
+  <div class="section-heading"><div><h1>Wallet terminal<span class="cursor">_</span></h1></div><img src="./assets/pepe-focused.svg" width="110" height="110" alt="Focused frog at a laptop"></div>
   <div class="toolbar"><button id="select-all">SELECT ALL</button><button id="select-none">SELECT NONE</button><button id="copy-addresses">COPY SELECTED ADDRESSES</button><button id="refresh-balances">REFRESH BALANCES</button><button id="clear">CLEAR / RESET</button></div>
   <p id="wallet-summary">No wallets loaded. Generate or restore a fleet on Home.</p>
   <div id="wallet-list" class="wallet-list"></div>
@@ -67,7 +76,7 @@
   </div>
 </section>
 <section id="snipe" class="page" hidden>
-  <div class="section-heading"><div><p class="eyebrow">PREPARE. INSPECT. SIGN ON YOUR TERMS.</p><h1>Plan your entry<span class="cursor">_</span></h1></div><img src="./assets/pepe-thinking.svg" width="110" height="110" alt="Thinking frog"></div>
+  <div class="section-heading"><div><h1>Plan your entry<span class="cursor">_</span></h1></div><img src="./assets/pepe-thinking.svg" width="110" height="110" alt="Thinking frog"></div>
   <p>Build a separate transaction for every selected wallet. This is a preparation tool: no automatic buys, relayer, atomic bundle, or guaranteed inclusion.</p>
   <article class="panel">
     <label for="buy-mode">Transaction type</label><select id="buy-mode"><option value="token">Token / Uniswap v2 ETH buy (Ethereum)</option><option value="mint">NFT / standard mint template</option><option value="raw">Advanced / reviewed contract calldata</option></select>
@@ -84,7 +93,7 @@
   </article>
 </section>
 <section id="pnl" class="page" hidden>
-  <div class="section-heading"><div><p class="eyebrow">A LITTLE GREEN FOR THE TIMELINE</p><h1>Pepe P&amp;L studio<span class="cursor">_</span></h1></div><img src="./assets/pepe-dancing.svg" width="110" height="110" alt="Dancing frog"></div>
+  <div class="section-heading"><div><h1>Pepe P&amp;L studio<span class="cursor">_</span></h1></div><img src="./assets/pepe-dancing.svg" width="110" height="110" alt="Dancing frog"></div>
   <div class="grid-two"><article class="panel"><h2>Your numbers. Your meme.</h2>
     <label for="pnl-entry">Entry price (your quote currency)</label><input id="pnl-entry" inputmode="decimal" value="0.01">
     <label for="pnl-exit">Exit price</label><input id="pnl-exit" inputmode="decimal" value="0.015">
@@ -95,7 +104,7 @@
   <div class="frog-strip"><img src="./assets/pepe-happy.svg" alt="Happy frog"><img src="./assets/pepe-sad.svg" alt="Sad frog"><img src="./assets/pepe-smug.svg" alt="Smug frog"><img src="./assets/pepe-sleepy.svg" alt="Sleepy frog"></div>
 </section>
 <section id="token" class="page" hidden>
-  <div class="section-heading"><div><p class="eyebrow">IMDBUNDLER / ETHEREUM</p><h1>The IMDB token<span class="cursor">_</span></h1></div><img src="./assets/pepe-smug.svg" width="110" height="110" alt="Smug frog"></div>
+  <div class="section-heading"><div><h1>The IMDB token<span class="cursor">_</span></h1></div><img src="./assets/pepe-smug.svg" width="110" height="110" alt="Smug frog"></div>
   <div class="stats"><article><span>INITIAL SUPPLY</span><strong>1,000,000,000</strong><small>IMDB · 18 decimals</small></article><article><span>SWAP FEE</span><strong>2%</strong><small>IMD → IMDB → burn</small></article><article><span>CONTROL</span><strong>IMMUTABLE</strong><small>No owner · no mint · no upgrades</small></article></div>
   <article class="panel"><h2>Live contracts</h2><p id="launch-status">Loading verified launch addresses…</p><dl id="deployment-details"></dl>
     <p>Paired with IMD on Uniswap v4. The 1.25% LP fee is separate from the hook's 2% fee. The factory allocates 10% to the agent distributor, 88% to pool liquidity, and 2% to the payer or policy treasury.</p>

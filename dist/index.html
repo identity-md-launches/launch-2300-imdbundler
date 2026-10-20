@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'">
+  <meta name="description" content="Your wallets. Your browser. Generate wallets, encrypt backups, and prepare individual token or NFT transactions with imdbundler.">
+  <title>imdbundler // your wallets. your browser.</title>
+  <meta property="og:title" content="imdbundler // your wallets. your browser.">
+  <meta property="og:description" content="Generate wallets, encrypt backups, prepare token or NFT transactions, and download a Pepe P&amp;L card. Fully client-side.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://imdbundler.sites.imd.fun/">
+  <meta property="og:image" content="https://imdbundler.sites.imd.fun/assets/share.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="imdbundler wallet workbench with a lime-green Pepe on black">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="./assets/pepe-sunglasses.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header>
+  <a class="brand" href="#home"><img src="./assets/pepe-smug.svg" alt="" width="46" height="46"> imdbundler<span class="cursor">_</span></a>
+  <span class="badge">100% CLIENT-SIDE</span>
+</header>
+<nav aria-label="Main navigation">
+  <a href="#home" data-page="home">Home</a><a href="#manage" data-page="manage">Manage <span id="nav-count">0</span></a>
+  <a href="#snipe" data-page="snipe">Snipe</a><a href="#pnl" data-page="pnl">P&amp;L</a><a href="#token" data-page="token">IMDB</a>
+</nav>
+<main id="main">
+<div id="notice" role="status" aria-live="polite" hidden></div>
+<section id="home" class="page">
+  <div class="hero">
+    <div><h1>MORE WALLETS.<br>YOUR CONTROL<span class="cursor">_</span></h1>
+    <p class="intro">Generate a fleet. Prepare your next move.<br>Your keys stay in this browser.</p>
+    <div class="hero-tags"><span>NO SIGN-IN</span><span>NO AUTO-CONNECT</span><span>NO KEY SERVER</span></div></div>
+    <div class="hero-art"><img src="./assets/pepe-sunglasses.svg" width="300" height="300" alt="A lime frog wearing sunglasses"><span>[ READY WHEN YOU ARE ]</span></div>
+  </div>
+  <div class="grid-two">
+    <article class="panel"><div class="panel-heading"><h2>01 / Generate wallets</h2><img src="./assets/pepe-happy.svg" alt="" width="60" height="60"></div>
+      <p>Fresh independent keypairs, generated with browser cryptographic randomness. No shared seed.</p>
+      <label for="wallet-count">Number of wallets <span>1–50</span></label>
+      <div class="inline"><input id="wallet-count" type="number" min="1" max="50" value="5" inputmode="numeric"><button id="generate" class="primary">GENERATE WALLETS ↗</button></div>
+      <p class="small">Keep an encrypted backup before closing this tab. Nothing is saved automatically.</p>
+    </article>
+    <article class="panel"><div class="panel-heading"><h2>Restore your fleet</h2><img src="./assets/pepe-thinking.svg" alt="" width="60" height="60"></div>
+      <label for="restore-file">Encrypted imdbundler JSON</label><input id="restore-file" type="file" accept=".json,application/json">
+      <label for="restore-password">Backup password</label><input id="restore-password" type="password" autocomplete="off" minlength="12" placeholder="12+ characters">
+      <button id="restore">DECRYPT LOCALLY</button>
+    </article>
+  </div>
+  <div class="ticker" aria-label="Your security workflow"><span>01 GENERATE</span><span>→</span><span>02 ENCRYPT &amp; BACK UP</span><span>→</span><span>03 PREPARE</span><span>→</span><span>04 REVIEW &amp; SIGN</span></div>
+</section>
+<section id="manage" class="page" hidden>
+  <div class="section-heading"><div><h1>Wallet terminal<span class="cursor">_</span></h1></div><img src="./assets/pepe-focused.svg" width="110" height="110" alt="Focused frog at a laptop"></div>
+  <div class="toolbar"><button id="select-all">SELECT ALL</button><button id="select-none">SELECT NONE</button><button id="copy-addresses">COPY SELECTED ADDRESSES</button><button id="refresh-balances">REFRESH BALANCES</button><button id="clear">CLEAR / RESET</button></div>
+  <p id="wallet-summary">No wallets loaded. Generate or restore a fleet on Home.</p>
+  <div id="wallet-list" class="wallet-list"></div>
+  <div class="grid-two">
+    <article class="panel"><h2>Encrypted backups</h2><p>The complete fleet is saved as an encrypted JSON. Export a separate Web3 keystore to use one wallet with a compatible external signer.</p>
+      <label for="export-password">New encryption password</label><input id="export-password" type="password" autocomplete="new-password" placeholder="12+ characters">
+      <label for="export-confirm">Confirm password</label><input id="export-confirm" type="password" autocomplete="new-password">
+      <button id="export" class="primary">DOWNLOAD ENCRYPTED FLEET</button>
+      <label for="keystore-wallet">Individual wallet for a Web3 keystore</label><select id="keystore-wallet"><option value="">No wallets</option></select><button id="export-keystore">DOWNLOAD ENCRYPTED KEYSTORE</button>
+      <p class="small">Never send backups or passwords to anyone. Loss of the password means loss of access.</p>
+    </article>
+    <article class="panel"><h2>Distribute native funds</h2><p>Prepare one transfer per selected wallet. Your funding wallet signs each transfer separately. Keep extra ETH for gas.</p>
+      <label for="fund-from">Your external funding address</label><input id="fund-from" spellcheck="false" autocomplete="off" placeholder="0x…">
+      <label for="fund-amount">ETH per selected wallet</label><input id="fund-amount" inputmode="decimal" placeholder="0.01">
+      <button id="prepare-funding">PREPARE FUNDING PLAN</button><p id="fund-total" class="small"></p>
+    </article>
+  </div>
+</section>
+<section id="snipe" class="page" hidden>
+  <div class="section-heading"><div><h1>Plan your entry<span class="cursor">_</span></h1></div><img src="./assets/pepe-thinking.svg" width="110" height="110" alt="Thinking frog"></div>
+  <p>Build a separate transaction for every selected wallet. This is a preparation tool: no automatic buys, relayer, atomic bundle, or guaranteed inclusion.</p>
+  <article class="panel">
+    <label for="buy-mode">Transaction type</label><select id="buy-mode"><option value="token">Token / Uniswap v2 ETH buy (Ethereum)</option><option value="mint">NFT / standard mint template</option><option value="raw">Advanced / reviewed contract calldata</option></select>
+    <label for="target">Target token or NFT / destination contract</label><input id="target" spellcheck="false" autocomplete="off" placeholder="0x…">
+    <div class="grid-two compact"><div><label for="buy-value">ETH per wallet (total transaction value)</label><input id="buy-value" inputmode="decimal" placeholder="0.01"></div><div><label for="selected-count">Wallets in this plan</label><output id="selected-count">0 selected — choose wallets in Manage</output></div></div>
+    <div id="token-fields"><div class="grid-two compact"><div><label for="min-output">Minimum tokens received per wallet</label><input id="min-output" inputmode="decimal" placeholder="Required — greater than zero"></div><div><label for="token-decimals">Token decimals</label><input id="token-decimals" type="number" min="0" max="36" value="18"></div></div>
+      <div class="grid-two compact"><div><label for="slippage">Quote slippage allowance (%)</label><input id="slippage" inputmode="decimal" value="1"></div><div><label for="deadline">Deadline from now (minutes)</label><input id="deadline" type="number" value="10" min="1" max="60"></div></div>
+      <button id="quote">READ QUOTE &amp; SET MINIMUM</button><p id="quote-info" class="small">Direct WETH → token pool only. The IMDB launch uses v4; use a reviewed v4 transaction in Advanced mode. Every wallet's trade changes the price for the next.</p>
+    </div>
+    <div id="mint-fields" hidden><label for="mint-signature">Mint function (verify against the contract ABI)</label><select id="mint-signature"><option value="mint(uint256)">mint(uint256)</option><option value="mint(address,uint256)">mint(address,uint256)</option></select><label for="mint-quantity">NFT quantity per wallet</label><input id="mint-quantity" type="number" value="1" min="1" max="100"><p class="small">NFT contracts have different interfaces. These templates only work when the target implements the selected function. Allowlist proofs and marketplace orders require Advanced mode.</p></div>
+    <div id="raw-fields" hidden><label for="calldata">Reviewed calldata, including selector</label><textarea id="calldata" rows="5" spellcheck="false" placeholder="0x…"></textarea><p class="small">The same calldata is used for each wallet. Verify embedded recipients, amounts, approvals, deadlines and chain. A contract address alone does not identify a buy function.</p></div>
+    <label class="check"><input id="review-target" type="checkbox"> I checked the target and interface. I will inspect and simulate each transaction before signing.</label>
+    <button id="prepare-buy" class="primary">PREPARE SELECTED WALLETS ↗</button>
+  </article>
+</section>
+<section id="pnl" class="page" hidden>
+  <div class="section-heading"><div><h1>Pepe P&amp;L studio<span class="cursor">_</span></h1></div><img src="./assets/pepe-dancing.svg" width="110" height="110" alt="Dancing frog"></div>
+  <div class="grid-two"><article class="panel"><h2>Your numbers. Your meme.</h2>
+    <label for="pnl-entry">Entry price (your quote currency)</label><input id="pnl-entry" inputmode="decimal" value="0.01">
+    <label for="pnl-exit">Exit price</label><input id="pnl-exit" inputmode="decimal" value="0.015">
+    <label for="pnl-quantity">Token amount</label><input id="pnl-quantity" inputmode="decimal" value="10000">
+    <label for="pnl-percent">Or enter gain / loss % (overrides exit)</label><input id="pnl-percent" inputmode="decimal" placeholder="e.g. 50 or -25">
+    <button id="render-pnl">RENDER CARD</button><button id="download-pnl" class="primary">DOWNLOAD PNG ↗</button><p class="small">Illustrative, self-reported P&amp;L. Excludes gas, trading fees and tax. Never an account screenshot.</p>
+  </article><div class="card-preview"><canvas id="pnl-canvas" width="1200" height="800" aria-label="Shareable profit and loss card"></canvas><p id="pnl-description" class="small"></p></div></div>
+  <div class="frog-strip"><img src="./assets/pepe-happy.svg" alt="Happy frog"><img src="./assets/pepe-sad.svg" alt="Sad frog"><img src="./assets/pepe-smug.svg" alt="Smug frog"><img src="./assets/pepe-sleepy.svg" alt="Sleepy frog"></div>
+</section>
+<section id="token" class="page" hidden>
+  <div class="section-heading"><div><h1>The IMDB token<span class="cursor">_</span></h1></div><img src="./assets/pepe-smug.svg" width="110" height="110" alt="Smug frog"></div>
+  <div class="stats"><article><span>INITIAL SUPPLY</span><strong>1,000,000,000</strong><small>IMDB · 18 decimals</small></article><article><span>SWAP FEE</span><strong>2%</strong><small>IMD → IMDB → burn</small></article><article><span>CONTROL</span><strong>IMMUTABLE</strong><small>No owner · no mint · no upgrades</small></article></div>
+  <article class="panel"><h2>Live contracts</h2><p id="launch-status">Loading verified launch addresses…</p><dl id="deployment-details"></dl>
+    <p>Paired with IMD on Uniswap v4. The 1.25% LP fee is separate from the hook's 2% fee. The factory allocates 10% to the agent distributor, 88% to pool liquidity, and 2% to the payer or policy treasury.</p>
+    <p>The fee is 2% of settled IMD paid on buys and gross IMD received on sells, rounded down to whole minor units. Buybacks run in the same pool with a fixed price-movement bound. Unspent fees and temporarily unavailable burn tokens remain as claims; anyone can retry processing. ERC-20 transfers have no tax.</p>
+    <button id="burn-stats">REFRESH ON-CHAIN STATS</button><pre id="burn-output">Refresh to read current supply and burn totals on Ethereum.</pre>
+  </article>
+</section>
+<section id="transaction-panel" class="panel" hidden>
+  <div class="panel-heading"><h2>Review unsigned transactions</h2><img src="./assets/pepe-focused.svg" alt="" width="65" height="65"></div>
+  <p id="plan-description"></p><div class="toolbar"><button id="download-plan">DOWNLOAD PUBLIC JSON</button><button id="copy-plan">COPY PUBLIC JSON</button><button id="discard-plan">DISCARD PLAN</button></div>
+  <details><summary>Optional external wallet signing</summary><p>Choose one extension explicitly. Nothing connects on page load. Import the relevant wallet into your own compatible signer first. Each transaction requires its exact sender account and selected chain. This site never switches accounts or networks for you.</p><button id="discover-wallets">DISCOVER EXTENSIONS</button><label for="extension">Extension to use for this request</label><select id="extension"><option value="">Choose an extension</option></select></details>
+  <div id="transactions"></div>
+</section>
+<details id="network-settings" class="panel"><summary>Public RPC &amp; network settings <span id="network-name">Ethereum / chain 1</span></summary>
+  <div class="grid-two compact"><div><label for="chain">Network</label><select id="chain"></select></div><div><label for="rpc-url">Public RPC URL</label><input id="rpc-url" type="url" spellcheck="false"></div></div>
+  <label for="balance-token">Optional ERC-20 address for balances</label><input id="balance-token" placeholder="0x…" autocomplete="off" spellcheck="false">
+  <p class="small">RPC requests share public addresses and transaction details with the chosen provider. They never contain keys or passwords. A malicious RPC can lie; verify important results independently. Base, Arbitrum and Optimism support funding and NFT / calldata plans. The built-in v2 token route supports Ethereum.</p>
+</details>
+</main>
+<footer><img src="./assets/pepe-sleepy.svg" alt="" width="55" height="55"><div><strong>YOUR KEYS. YOUR RESPONSIBILITY.</strong><p>Keys are created and encrypted locally. This site has no key backend. Use a trusted device and a verified copy of the site. Browser extensions, malware, or a compromised page can access browser memory. Back up before closing; clear/reset is best effort, not a guaranteed memory wipe. Trading and NFTs can lose all their value.</p></div><a href="#home">imdbundler ↑</a></footer>
+<dialog id="review-dialog" aria-labelledby="dialog-title"><h2 id="dialog-title">Review action</h2><pre id="dialog-content"></pre><div class="toolbar"><button id="dialog-cancel">CANCEL</button><button id="dialog-confirm" class="primary">CONFIRM</button></div></dialog>
+<noscript>This app needs JavaScript and a secure context. It has no server-side wallet functionality.</noscript>
+</body>
+</html>

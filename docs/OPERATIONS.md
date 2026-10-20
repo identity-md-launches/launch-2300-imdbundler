@@ -25,6 +25,10 @@ On 2026-10-20 a read-only request at Ethereum block **26234924** found code at b
 
 ## After launch: publish this site revision
 
+**2026-10-20 hosting follow-up:** the authorized command `imd site publish dist --name imdbundler` exited 1 with `not configured — run: imd pair --server <url>`. No pin, site ID, or active label was returned. The public domain returned HTTP 404. This release remains unpublished. No pairing or credential lookup was performed. See [the current validation record](VALIDATION.md).
+
+The current production export is `dist/`. Rebuild it and its matching CAR with `node web/build.mjs`; preview it with `node web/preview.mjs`. `release/hosting.json` records `ipfs: true`, the requested label and the current CID as publication intent, not a successful publish receipt. An already authorized network publisher can run `imd site publish dist --name imdbundler`, then confirm the returned CID, pin status, public page and assets. The older packaging-only steps below remain available for importing the CAR directly.
+
 There are **no on-chain setters, owner addresses, signing keys, or new constructor parameters** to supply. `IMDBToken` originally had no constructor arguments; `IMDBHook` used `(PoolManager, token)`. The launch's allocation and immutable economics remain as recorded. The existing manifest and build configuration are unchanged.
 
 1. Run the root checks in `README.md`, review this revision, and publish the accepted source to the existing launch repository through the network's authorized publisher. The app's exact source link describes the deployed contracts, so it stays pinned to the recorded launch commit.

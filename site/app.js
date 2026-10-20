@@ -13,6 +13,7 @@ const providers = new ProviderDirectory();
 const balances = new Map();
 let bundle = null, deployment = null, working = false, cardReady = false;
 let dialogResolve;
+let busyFocus = null, reviewFocus = null;
 const txStatus = new Map();
 
 function node(tag, text, className) {
@@ -29,6 +30,7 @@ function selectedWallets() {
   return wallets;
 }
 function busy(on) {
+  if (on) busyFocus = document.activeElement;
   working = on;
   for (const element of document.querySelectorAll('button,input,select,textarea')) {
     if (element.closest('dialog')) continue;
@@ -37,6 +39,11 @@ function busy(on) {
   document.body.setAttribute('aria-busy', String(on));
   if (!on) for (const [i, status] of txStatus) {
     if (status.requested) document.querySelector(`[data-send="${i}"]`)?.setAttribute('disabled', '');
+  }
+  // Native dialog return-focus cannot target a button while it is disabled.
+  if (!on && reviewFocus) {
+    if (reviewFocus.isConnected && !reviewFocus.disabled) reviewFocus.focus?.();
+    reviewFocus = null;
   }
 }
 function action(id, fn) {
@@ -49,6 +56,7 @@ function action(id, fn) {
   });
 }
 function review(title, content, confirmText = 'CONFIRM') {
+  reviewFocus = busyFocus;
   $('dialog-title').textContent = title; $('dialog-content').textContent = content;
   $('dialog-confirm').textContent = confirmText;
   $('review-dialog').showModal();

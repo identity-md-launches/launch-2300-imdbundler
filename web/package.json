@@ -1,0 +1,17 @@
+{
+  "name": "imdbundler-hosting",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "node preview.mjs",
+    "typecheck": "tsc --project tsconfig.json",
+    "validate": "node validate.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "playwright": "1.64.1",
+    "typescript": "7.0.2"
+  }
+}
