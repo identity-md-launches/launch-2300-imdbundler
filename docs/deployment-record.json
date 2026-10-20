@@ -1,0 +1,37 @@
+{
+  "chainId": 1,
+  "repoUrl": "https://github.com/identity-md-launches/launch-2300-imdbundler",
+  "sourceCommit": "864305f630ca6ea7d49f3a7f6120f299386f94aa",
+  "attestationHash": "fe13b0f1de730064967f4d75dfea46bfd5d1581b00342d5a3ade74674946b379",
+  "contracts": [
+    {
+      "name": "IMDBToken",
+      "address": "0x9a26dcb2bbd88d4c964043f2611d6cb0031c1ee8",
+      "txHash": "0xd1e43869d111dc56cff402ecbd745b9937ce2a1d5981fa61ae19705a4555f33b",
+      "blockNumber": 26234792,
+      "creationCodeHash": "9c4dd16da5d5217555d32e7b7e8cecbc80ec0bbf0bb60b559708c757da959485",
+      "abiHash": "93c989b81666ddc15db38e7a51d4b1e578eff8a11fc6630e2fa188b0c9a6daf6"
+    },
+    {
+      "name": "IMDBHook",
+      "address": "0x736361f1ffa0f2407724589addcde144f047a0cc",
+      "txHash": "0xd1e43869d111dc56cff402ecbd745b9937ce2a1d5981fa61ae19705a4555f33b",
+      "blockNumber": 26234792,
+      "creationCodeHash": "80d160ff21c7b98baeeb2200a5ebba27dbe8b10f8966e29612bf55627b122499",
+      "abiHash": "7b3c48b76efacc02e97bcbcf68aec24d4c2fb0de4d68ef38faf0ffbbc25f4456"
+    }
+  ],
+  "poolManager": "0x000000000004444c5dc75cb358380d2e3de08a90",
+  "pairToken": {
+    "address": "0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7",
+    "symbol": "IMD",
+    "name": "Identity.md",
+    "decimals": 18
+  },
+  "pool": {
+    "pairedCurrency": "0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7",
+    "fee": 12500,
+    "tickSpacing": 60,
+    "initialPrice": "79228162514264337593543950336"
+  }
+}

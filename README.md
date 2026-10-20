@@ -2,7 +2,14 @@
 
 A static multi-wallet workbench and an immutable IMDB / IMD Uniswap v4 buyback-and-burn hook. Everything required to build and test is vendored as ordinary files. No package installation, backend, key service, submodule, or network is required for the normal checks.
 
-**Deployment status:** implementation and an IPFS release artifact are supplied. No contracts were broadcast, no launch repository was published, and no live domain was configured by this assignment. The IMD launch and publishing steps supply the real addresses and source URL. The app displays “awaiting verified deployment” until then; it contains no invented contract addresses.
+**Live contracts:** the existing Ethereum launch is recorded in [deployment-record.json](docs/deployment-record.json). This site release now includes the verified token and hook addresses:
+
+| Contract | Ethereum mainnet address |
+| --- | --- |
+| IMDB | [`0x9a26dcb2bbd88d4c964043f2611d6cb0031c1ee8`](https://etherscan.io/address/0x9a26dcb2bbd88d4c964043f2611d6cb0031c1ee8) |
+| Hook | [`0x736361f1ffa0f2407724589addcde144f047a0cc`](https://etherscan.io/address/0x736361f1ffa0f2407724589addcde144f047a0cc) |
+
+Contract source remains unchanged. The launch source is already in [the launch repository](https://github.com/identity-md-launches/launch-2300-imdbundler/tree/864305f630ca6ea7d49f3a7f6120f299386f94aa). This follow-up supplies an updated static site and reproducible IPFS CAR; publishing this revision, pinning it, and activating **imdbundler.sites.imd.fun** remain the network publisher's steps. The domain returned HTTP 404 during this assignment; a locally generated CID is not a hosted site.
 
 ## Run and check
 
@@ -10,6 +17,7 @@ Requires Foundry with Solidity **0.8.26**, and Node **22 or newer** for site che
 
 ```sh
 forge build
+FOUNDRY_FUZZ_SEED=0xacb203d670db1f70f458598b65fbad8cb01f4491378fbe0c08a61bd984f2c01f forge test
 forge test
 forge fmt --check
 node --test test/site/*.test.mjs
@@ -19,16 +27,19 @@ node scripts/serve.mjs
 
 The last command serves the static site at `http://127.0.0.1:4173`. It only serves files and accepts GET/HEAD. It never accepts wallet data. `npm test`, `npm run build`, and `npm run serve` are equivalent conveniences; do not run `npm install`.
 
-The Foundry fuzz seed is pinned to `0xb38a9ff495bdd18e650f7fcfaf78750fb7edd57ffc4f545ce5d371877a55407a`. Fuzz tests run 256 cases per test; invariant campaigns run 64 sequences of 32 calls for both currency orderings. Tests use a real freshly deployed v4 PoolManager, not a mocked swap engine. See [validation and security review](docs/SECURITY.md).
+The protected Foundry configuration pins seed `0xb38a9ff495bdd18e650f7fcfaf78750fb7edd57ffc4f545ce5d371877a55407a`. The explicit command also tests the follow-up assignment's seed. Fuzz tests run 256 cases per test; invariant campaigns cover both currency orderings with real freshly deployed v4 PoolManagers. A regression reproduces a dust trade at a tick boundary and checks that the invariant harness generates a valid reverse price limit. See [validation and security review](docs/SECURITY.md).
 
 ## Browser workflow
 
 1. **Home:** generate 1–50 independent wallets using cryptographic browser randomness, or restore an encrypted fleet. Addresses are displayed; private keys never appear in the UI, logs, public transaction exports, or RPC requests.
-2. **Manage:** select wallets, copy addresses, read native and optional ERC-20 balances, and export password-encrypted backups. Export one standard Web3 keystore when an external signer needs one generated wallet. The fleet format is documented in [security notes](docs/SECURITY.md).
+2. **Manage:** select wallets, copy one or all selected addresses, read native and optional ERC-20 balances, and export password-encrypted backups. Export one standard Web3 keystore when an external signer needs one generated wallet. The fleet format is documented in [security notes](docs/SECURITY.md).
 3. **Fund:** enter your external funding address and native ETH amount per selected wallet. Inspect/download one unsigned transfer per recipient. Fees are additional. Each transfer needs its own signature.
 4. **Snipe:** prepare Ethereum Uniswap v2 ETH-to-token buys with nonzero minimum output and a deadline; prepare explicit NFT mint templates; or paste reviewed calldata for another router/marketplace. The generated address is the sender and, for supported templates, recipient of each transaction.
-5. **Sign:** export public JSON to your own signer, or explicitly discover and choose one EIP-6963 extension. The app never connects on load, selects `window.ethereum`, changes an extension's network, or assumes one account owns the fleet. It checks chain and sender again for every request, runs a simulation, and requests one signature at a time. Import a generated wallet's encrypted keystore into a compatible trusted signer first if needed.
+5. **Sign:** export public JSON to your own signer, or explicitly discover and choose one EIP-6963 extension. The app never connects on load, selects `window.ethereum`, changes an extension's network, or assumes one account owns the fleet. It checks chain and sender again for every request, runs a simulation, and requests one signature at a time. An account permission prompt cannot bypass plan expiry. Duplicate provider announcements cannot replace your choice. Import a generated wallet's encrypted keystore into a compatible trusted signer first if needed.
 6. **P&L:** enter entry/exit/quantity or override exit with gain/loss percentage. Render and download a 1200×800 PNG with an original happy, sad, or thinking frog. Cards are labeled self-reported and exclude fees.
+7. **Token info:** copy the live token/hook addresses, open the exact contract source, and request on-chain stats. Identity, bytecode presence, supply, and burn counters are read at one Ethereum block. Hook burns and all-holder burns are reported separately. RPC failures display unavailable results, never invented zeroes.
+
+If the extension rejects a signature, you may try again. If a send request loses its response or returns an invalid hash, its button locks because it may already have been submitted. Check the extension and explorer before discarding the plan and preparing another one.
 
 Eight locally bundled, original frog SVG poses use only lime and black. They have no third-party image requests, tracking, or fonts. They are independently drawn meme-inspired artwork dedicated under CC0; see [art license](site/assets/LICENSE.txt).
 
@@ -88,4 +99,4 @@ See [hook accounting](docs/HOOK.md) for exact-in/out and partial-fill mathematic
 - `checks/MainnetPairFork.sol.example`: optional network-dependent mainnet IMD rehearsal, excluded from normal compilation.
 - `docs/dependencies.json`: exact upstream commits/versions and JavaScript checksums.
 
-No manifest is authored here: the launch's separate manifest step supplies it after acceptance. Do not send assets directly to the hook. No administrative rescue exists. Browser users are responsible for trusted software, their backups, passwords, final transaction review, and funds. A compromised page, device, or extension can read browser memory; encryption of a downloaded file cannot protect a currently unlocked page.
+The existing launch manifest is retained as historical deployment data. This follow-up deploys no contracts and changes no token economics or dependencies. Do not send assets directly to the hook. No administrative rescue exists. Browser users are responsible for trusted software, their backups, passwords, final transaction review, and funds. A compromised page, device, or extension can read browser memory; encryption of a downloaded file cannot protect a currently unlocked page.

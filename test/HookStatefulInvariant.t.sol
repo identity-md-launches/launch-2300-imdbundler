@@ -72,7 +72,10 @@ contract MultiActorHandler is Test {
     }
 
     function _limit(bool zeroForOne, uint256 rawTicks) private view returns (uint160) {
-        (, int24 tick,,) = manager.getSlot0(key.toId());
+        (uint160 price,,,) = manager.getSlot0(key.toId());
+        // slot0.tick can be one below the price's tick after crossing zeroForOne.
+        // Use the actual price so the generated reverse limit is strictly above it.
+        int24 tick = TickMath.getTickAtSqrtPrice(price);
         uint256 distance = bound(rawTicks, 1, 6000);
         int256 t = zeroForOne ? int256(tick) - int256(distance) : int256(tick) + int256(distance);
         if (t <= TickMath.MIN_TICK) return TickMath.MIN_SQRT_PRICE + 1;
@@ -233,6 +236,7 @@ contract MultiActorHandler is Test {
 }
 
 abstract contract MultiActorInvariants is HookFixture {
+    using StateLibrary for IPoolManager;
     MultiActorHandler handler;
 
     function setUp() public override {
@@ -251,6 +255,22 @@ abstract contract MultiActorInvariants is HookFixture {
         selectors[5] = MultiActorHandler.process.selector;
         selectors[6] = MultiActorHandler.midSyncTrade.selector;
         targetSelector(FuzzSelector(address(handler), selectors));
+    }
+
+    function test_dustThenReverseTradeHasStrictPriceLimit() public {
+        // A one-wei zeroForOne trade can leave sqrtPrice at a tick boundary but
+        // slot0.tick one below it. A reverse limit derived from tick + 1 equals
+        // the current price and is invalid; derive limits from sqrtPrice instead.
+        handler.midSyncTrade(pairFirst(), true, true, 0, 12419, 900_000_000 ether);
+        (uint160 price, int24 tick,,) = manager.getSlot0(key.toId());
+        assertEq(price, Q96);
+        assertEq(tick, -1);
+        handler.midSyncTrade(!pairFirst(), false, true, 4478, 0, 15530);
+        assertEq(handler.midSyncTrades(), 2);
+        invariant_imdClaimsConserved();
+        invariant_supplyFallsOnlyByHookBurns();
+        invariant_managerBacksHookClaimsAtRest();
+        invariant_hookHoldsNoErc20AndCountersOnlyGrow();
     }
 
     /// forge-config: default.invariant.runs = 64

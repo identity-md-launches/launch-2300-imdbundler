@@ -1,20 +1,20 @@
 # Validation and security review
 
-This is an implementation review and test record, not an independent security audit. The launch network still needs its independent contributor review and actual-factory rehearsal before release.
+This is an implementation review and test record, not an independent security audit. The token and hook are already deployed. This follow-up changes the static site, public deployment metadata, and an invariant test harness; production Solidity source and dependencies remain unchanged. The network should independently review each site release before publication.
 
 ## Automated checks
 
 Normal checks require no network or secrets. Results on the delivered implementation:
 
 - `forge build`: succeeds with pinned Solidity 0.8.26 and Cancun.
-- `forge test`: **62 reported tests/groups passed**, no failures or skips. This includes 60 ordinary/fuzz tests and two invariant campaigns (two invariants each, grouped by this Foundry version).
-- Fuzz cases: 256 per fuzz test, including transfer/burn amounts, all trade directions and exactness modes, partial fills, and minor-unit rounding. The assignment's exact seed is in `foundry.toml`.
-- Stateful invariants: 64 × 32 = **2,048 calls per currency ordering**, all succeeding. Random trades and claim retries check fee conservation, total-supply reduction, settled deltas, and no retained ERC-20 fees. Across both campaigns: 4,096 calls.
+- `forge test`: **114 reported tests/groups passed**, no failures or skips: 110 ordinary/fuzz tests and four invariant groups. Both the protected configuration's pinned seed and the assignment's explicit `FOUNDRY_FUZZ_SEED=0xacb203d670db1f70f458598b65fbad8cb01f4491378fbe0c08a61bd984f2c01f` were checked.
+- Fuzz cases: 256 per fuzz test, including transfer/burn amounts, all trade directions and exactness modes, partial fills, and minor-unit rounding.
+- Stateful invariants cover both currency orderings. Random trades, liquidity changes, multiple traders, mid-sync payments, donations and claim retries check fee conservation, total-supply reduction, backing, settled deltas, and no retained ERC-20 fees. The runs retained `fail_on_revert = true`.
+- The assignment seed reproduced an existing harness error: a one-wei zeroForOne trade left the square-root price at a tick boundary while the stored tick was one lower. A reverse limit of stored tick + 1 then equaled the current price. Both regression tests failed before repair with `PriceLimitAlreadyExceeded`; the handler now derives its limit from the actual square-root price. No invariant was weakened and no hook behavior was changed.
 - `forge fmt --check`: succeeds.
-- `node --test test/site/*.test.mjs`: **18 tests passed**. Includes cryptographic export/restore, wrong passwords, tampering, KDF/resource bounds, random IV/salt, clear-during-encryption, standard keystore interoperability, exact transaction ABI fields, invalid inputs, account/network changes, RPC failures, DOM workflow, and complete IPFS archive reconstruction.
-- A gas report was run for all four trade modes in both currency orderings. These swaps perform additional AMM work; use live gas estimation instead of a fixed gas limit. The representative local prefunded router calls were roughly 0.35–0.46 million gas. This includes the pool trade, hook, buyback, and settlement, not the entire test setup or transaction intrinsic gas.
-- A separate read-only fork at Ethereum block **26234425** passed buy/sell × exact-input/output against **real IMD bytecode**, followed by liquidity fee collection. It used a new v4 PoolManager and test-funded balances, not the launch factory. See `checks/MainnetPairFork.sol.example` and the operations document to reproduce.
-- Public RPC reads confirmed IMD symbol/18 decimals, nonempty bytecode for the site's Ethereum Router02 and WETH, Router02's WETH address, and WETH's symbol. The browser also checks selected chain, contract code, router WETH, and token decimals before building the built-in token buy.
+- `node --test test/site/*.test.mjs`: **30 tests** covering cryptographic export/restore through 50 wallets, wrong passwords, tampering, resource bounds, clear-during-encryption/restoration, standard keystore interoperability, transaction ABI fields, invalid inputs, and complete IPFS archive reconstruction. DOM tests exercise generation, encryption, funding, NFT plans, provider selection/rejection, uncertain submission locks, P&L wiring, and live stats success/failure. Separate tests cover duplicate provider announcements, account/network changes, expiry during permission prompts, invalid gas estimates, metadata validation, single-block reads, and impossible burn totals.
+- A read-only check at Ethereum block **26234924** confirmed code at the supplied live token/hook, IMDB metadata, the hook's token reference, supply and burn counters. No live transaction was sent. See `OPERATIONS.md` for the snapshot and provenance.
+- Historical checks retained from the original launch: a four-mode gas report (~0.35–0.46 million gas for local prefunded router calls), a read-only real-IMD fork at block **26234425**, and Router02/WETH identity checks. They were not rerun as part of this site follow-up. The browser still verifies selected chain, contract code, router WETH, and token decimals before built-in token buys.
 
 The supplied protected floor checks were read as acceptance inputs. They are not copied into or weakened by this repository; the independent verifier runs them against the final launch artifacts.
 
@@ -71,7 +71,9 @@ Individual exports are the standard encrypted Web3 Secret Storage v3 keystore pr
 
 Clear/reset removes application wallet state, selections, plans and password fields. Leaving the page clears wallet references, including before restoration from the back/forward cache. Neither action deletes downloaded files or revokes a wallet extension's own site permissions; users manage those separately. A before-unload warning helps prevent accidental loss but is not a backup guarantee.
 
-RPC traffic carries only selected public addresses and transaction fields. The RPC helper only permits read-only methods and rejects credential-bearing/insecure remote URLs. RPCs can lie about prices, balances, simulation, or chain identity, so critical results need independent verification. ETH-signing requests go exclusively to an explicitly selected extension; the app never receives that extension's keys. It checks the sender and chain, rechecks both after requesting accounts, and never changes account/network automatically. Each request is separately reviewed and simulated. Rejection or mismatch causes no send request. App reset does not claim to revoke extension-level permissions.
+RPC traffic carries only selected public addresses and transaction fields. The RPC helper only permits read-only methods and rejects credential-bearing/insecure remote URLs. RPCs can lie about prices, balances, simulation, or chain identity, so critical results need independent verification. IMDB stats validate metadata and contract identity and read one block to avoid mixing pre/post-burn counters. An unavailable RPC replaces displayed stats with an explicit unavailable state.
+
+ETH-signing requests go exclusively to an explicitly selected extension; the app never receives that extension's keys. It checks the sender and chain, rechecks both after requesting accounts, rechecks plan expiry after permission prompts, and never changes account/network automatically. Duplicate provider announcements cannot replace a selected provider object. Each request is separately reviewed and simulated. Account/network mismatch causes no send request; a signature rejection permits retry. An ambiguous send response locks that transaction's button because the transaction might already have been submitted. App reset does not revoke extension-level permissions. Provider names are self-reported; a malicious extension or compromised page remains outside this trust boundary.
 
 Every transaction export is labeled unsigned and non-atomic. NFT templates are interface-specific; advanced calldata is not semantically decoded by the site. The v2 route enforces a nonzero recipient-balance minimum and on-chain deadline; quotes are indicative and do not predict transfer tax or later trades. No simulation guarantees future inclusion or execution.
 
@@ -79,9 +81,9 @@ A compromised page, extension, browser, OS, password manager, or domain can stil
 
 ## UI and publication limits
 
-The DOM integration test exercises generation, local encryption/download, selections, funding plan creation, RPC balances, failure feedback, reset, P&L drawing calls, and image/download wiring. It uses a vendored DOM implementation and a canvas test double. It does **not** claim a Chromium/mobile screenshot test, real extension prompt test, or validation of PNG raster pixels. The browser smoke checklist is in `OPERATIONS.md`.
+The DOM integration tests use a vendored DOM implementation and a canvas test double. They do **not** claim a Chromium/mobile screenshot test, real extension prompt test, or validation of PNG raster pixels. A Chromium smoke attempt could not run because the required runtime libraries were unavailable; providing them was blocked by the execution environment. Production desktop/mobile rendering, PNG opening, and actual signer interoperability remain release smoke checks.
 
-The release test independently reads CAR frames, verifies SHA-256 CID hashes, follows UnixFS links, and compares every reconstructed file with `site/`. No IPFS pin, domain update, GitHub publication, contract deployment, source explorer verification, or live token/hook address is claimed by an offline package build.
+The release test independently reads CAR frames, verifies SHA-256 CID hashes, follows UnixFS links, and compares every reconstructed file with `site/`. Live addresses come from the supplied existing launch attestation. No new IPFS pin, domain update, GitHub publication, contract deployment, or source explorer verification is claimed by the offline package build.
 
 ## Reference sources and dependencies
 

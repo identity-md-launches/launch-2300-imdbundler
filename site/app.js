@@ -2,12 +2,14 @@ import { Vault } from './vault.js';
 import { CHAINS, chainById } from './chains.js';
 import { fundingPlan, tokenPlan, nftMintPlan, contractPlan, publicBundle, profitLoss, address, amount, v2, erc20 } from './transactions.js';
 import { rpc, verifyChain, requireCode, simulate, sendWithProvider } from './rpc.js';
-import { formatEther, formatUnits, Interface } from './vendor/ethers.js';
+import { formatEther, formatUnits } from './vendor/ethers.js';
+import { parseDeployment, readTokenStats } from './deployment.js';
+import { ProviderDirectory } from './providers.js';
 
 const $ = id => document.getElementById(id);
 const vault = new Vault();
 const selected = new Set();
-const providers = new Map();
+const providers = new ProviderDirectory();
 const balances = new Map();
 let bundle = null, deployment = null, working = false, cardReady = false;
 let dialogResolve;
@@ -34,7 +36,7 @@ function busy(on) {
   }
   document.body.setAttribute('aria-busy', String(on));
   if (!on) for (const [i, status] of txStatus) {
-    if (status.hash) document.querySelector(`[data-send="${i}"]`)?.setAttribute('disabled', '');
+    if (status.requested) document.querySelector(`[data-send="${i}"]`)?.setAttribute('disabled', '');
   }
 }
 function action(id, fn) {
@@ -76,7 +78,10 @@ function page() {
   $('transaction-panel').hidden = !bundle || !['snipe', 'manage'].includes(name);
 }
 window.addEventListener('hashchange', page);
-function resetPlan() { bundle = null; txStatus.clear(); $('transactions').replaceChildren(); page(); }
+function resetPlan() {
+  bundle = null; txStatus.clear(); $('transactions').replaceChildren();
+  $('fund-total').textContent = ''; $('plan-description').textContent = ''; page();
+}
 function renderWallets() {
   $('nav-count').textContent = String(vault.count);
   $('wallet-summary').textContent = vault.count ? `${vault.count} wallets in memory / ${selected.size} selected / ${currentChain().name}` : 'No wallets loaded. Generate or restore a fleet on Home.';
@@ -126,16 +131,18 @@ action('export-keystore', async () => {
 action('clear', async () => {
   if (!await review('Clear all wallets?', 'This removes the in-memory wallets, selections, passwords and transaction plan. Download and verify an encrypted backup first. This is not a guaranteed memory wipe.', 'CLEAR WALLET MEMORY')) return;
   vault.clear(); selected.clear(); balances.clear(); resetPlan(); clearExportPasswords();
-  $('restore-password').value = ''; $('restore-file').value = ''; providers.clear(); discoverRequested = false; renderProviders(); renderWallets();
+  $('restore-password').value = ''; $('restore-file').value = ''; providers.clear(); renderProviders(); renderWallets();
   notice('Wallet memory and prepared transactions cleared. Encrypted downloads remain on your device.');
 });
 action('select-all', () => { vault.addresses.forEach(a => selected.add(a)); resetPlan(); renderWallets(); });
 action('select-none', () => { selected.clear(); resetPlan(); renderWallets(); });
+action('copy-addresses', () => copy(selectedWallets().join('\n')));
 for (const chain of CHAINS) { const option = node('option', `${chain.name} / ${chain.id}`); option.value = chain.id; $('chain').append(option); }
 $('rpc-url').value = CHAINS[0].rpc;
 $('chain').addEventListener('change', () => {
   $('rpc-url').value = currentChain().rpc; $('network-name').textContent = `${currentChain().name} / chain ${currentChain().id}`;
   balances.clear(); resetPlan(); renderWallets(); $('quote-info').textContent = 'Network changed. Request a fresh quote before preparing a token buy.';
+  $('review-target').checked = false; $('min-output').value = '';
 });
 $('rpc-url').addEventListener('change', () => { balances.clear(); renderWallets(); resetPlan(); });
 $('balance-token').addEventListener('change', () => { balances.clear(); renderWallets(); });
@@ -179,8 +186,8 @@ function setPlan(transactions, kind, expiresAt = new Date(Date.now() + 600_000).
 action('prepare-funding', () => {
   const wallets = selectedWallets();
   const transactions = fundingPlan({ wallets, from: $('fund-from').value, value: $('fund-amount').value, chainId: currentChain().id });
-  $('fund-total').textContent = `${formatEther(amount($('fund-amount').value) * BigInt(wallets.length))} ETH total, plus a separate gas fee for each transfer.`;
   setPlan(transactions, 'native-funding');
+  $('fund-total').textContent = `${formatEther(amount($('fund-amount').value) * BigInt(wallets.length))} ETH total, plus a separate gas fee for each transfer.`;
 });
 function modeChanged() {
   $('token-fields').hidden = $('buy-mode').value !== 'token';
@@ -189,6 +196,7 @@ function modeChanged() {
   $('review-target').checked = false; resetPlan();
 }
 $('buy-mode').addEventListener('change', modeChanged);
+$('review-target').addEventListener('change', () => { if (!$('review-target').checked) resetPlan(); });
 for (const id of ['target', 'buy-value', 'min-output', 'token-decimals', 'deadline', 'mint-quantity', 'mint-signature', 'calldata', 'fund-from', 'fund-amount']) {
   $(id).addEventListener('input', () => { resetPlan(); $('review-target').checked = false; });
 }
@@ -200,7 +208,7 @@ async function tokenMetadata(url, chain, token) {
   return Number(erc20.decodeFunctionResult('decimals', await rpc(url, 'eth_call', [{ to: token, data: erc20.encodeFunctionData('decimals') }, 'latest']))[0]);
 }
 action('quote', async () => {
-  resetPlan();
+  resetPlan(); $('review-target').checked = false;
   const chain = currentChain(), url = $('rpc-url').value, token = address($('target').value), wei = amount($('buy-value').value);
   const slippage = Number($('slippage').value);
   if (!Number.isFinite(slippage) || slippage < 0.01 || slippage > 5) throw new Error('Choose slippage between 0.01% and 5%.');
@@ -249,7 +257,10 @@ function renderPlan() {
     row.append(node('p', `FROM ${transaction.from}\nTO ${transaction.to}`, 'small'));
     const details = node('details'); details.append(node('summary', 'Inspect full transaction fields'), node('pre', JSON.stringify(transaction, null, 2))); row.append(details);
     const status = node('p', 'Unsigned / not simulated', 'transaction-status');
-    const copyButton = node('button', 'COPY TX'); copyButton.addEventListener('click', () => copy(JSON.stringify(transaction, null, 2)).catch(e => notice(e.message)));
+    const copyButton = node('button', 'COPY TX');
+    copyButton.addEventListener('click', async () => {
+      try { checkPlan(); await copy(JSON.stringify(transaction, null, 2)); } catch (error) { notice(error.message); }
+    });
     const simulateButton = node('button', 'SIMULATE');
     simulateButton.addEventListener('click', async () => {
       if (working) return; busy(true);
@@ -261,17 +272,30 @@ function renderPlan() {
     });
     const sendButton = node('button', 'SIGN IN CHOSEN EXTENSION'); sendButton.dataset.send = index;
     sendButton.addEventListener('click', async () => {
-      if (working || txStatus.get(index)?.hash) return; busy(true);
+      if (working || txStatus.get(index)?.requested) return; busy(true);
+      const originalPlan = bundle;
       try {
         checkPlan();
         const chosen = providers.get($('extension').value);
         if (!chosen) throw new Error('Discover extensions and explicitly choose one first.');
         if (!await review('Request one external signature?', `${chosen.name}\n${currentChain().name}\n\n${JSON.stringify(transaction, null, 2)}\n\nThe extension must control this exact sender. Inspect its confirmation before signing.`, 'SIMULATE & REQUEST SIGNATURE')) return;
         checkPlan(); await simulate($('rpc-url').value, transaction); checkPlan();
-        const hash = await sendWithProvider(chosen.provider, transaction);
+        const hash = await sendWithProvider(chosen.provider, transaction, {
+          beforeSend: () => {
+            checkPlan();
+            if (bundle !== originalPlan) throw new Error('Plan changed. Prepare and review it again.');
+          },
+          onRequest: () => { txStatus.set(index, { requested: true }); }
+        });
         if (typeof hash !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(hash)) throw new Error('The wallet returned an unexpected result. Check it before retrying.');
-        txStatus.set(index, { hash }); status.textContent = `Submitted: ${hash}. Check final receipt in your extension. Submission does not mean confirmed.`;
-      } catch (error) { notice(error.message); }
+        txStatus.set(index, { requested: true, hash }); status.textContent = `Submitted: ${hash}. Check final receipt in your extension. Submission does not mean confirmed.`;
+      } catch (error) {
+        if (error?.code === 4001) txStatus.delete(index);
+        else if (txStatus.get(index)?.requested) {
+          status.textContent = 'Submission status unknown. Check your extension and explorer before making another plan. This send button is locked to prevent accidental duplicates.';
+        }
+        notice(error.message);
+      }
       finally { busy(false); }
     });
     row.append(copyButton, simulateButton, sendButton, status); $('transactions').append(row);
@@ -283,19 +307,14 @@ action('discard-plan', () => { resetPlan(); notice('Plan discarded.'); });
 function renderProviders() {
   const previous = $('extension').value; $('extension').replaceChildren();
   const empty = node('option', 'Choose an extension'); empty.value = ''; $('extension').append(empty);
-  for (const [id, item] of providers) { const option = node('option', item.name); option.value = id; $('extension').append(option); }
-  if (providers.has(previous)) $('extension').value = previous;
+  for (const [id, item] of providers.entries()) { const option = node('option', item.name); option.value = id; $('extension').append(option); }
+  if (providers.get(previous)) $('extension').value = previous;
 }
-let discoverRequested = false;
 window.addEventListener('eip6963:announceProvider', event => {
-  if (!discoverRequested) return;
-  const detail = event.detail;
-  if (!detail || typeof detail.info?.uuid !== 'string' || typeof detail.info?.name !== 'string' || typeof detail.provider?.request !== 'function') return;
-  if (providers.size >= 20 || detail.info.uuid.length > 100) return;
-  providers.set(detail.info.uuid, { name: detail.info.name.slice(0, 60), provider: detail.provider }); renderProviders();
+  if (providers.accept(event.detail)) renderProviders();
 });
 action('discover-wallets', () => {
-  discoverRequested = true; providers.clear(); renderProviders(); window.dispatchEvent(new Event('eip6963:requestProvider'));
+  providers.discover(); renderProviders(); window.dispatchEvent(new Event('eip6963:requestProvider'));
   notice('Wallet discovery requested. Choose an extension by name; no accounts have been requested. If none appears, use your own external signing tool.');
 });
 
@@ -324,45 +343,48 @@ action('download-pnl', async () => {
   if (!blob) throw new Error('PNG export failed.');
   download(blob, 'imdbundler-pepe-pnl.png', 'image/png');
 });
-const hookRead = new Interface(['function token() view returns(address)', 'function totalFeesIMD() view returns(uint256)', 'function totalBuybackIMD() view returns(uint256)', 'function totalBurned() view returns(uint256)', 'function pendingIMD() view returns(uint256)', 'function pendingIMDB() view returns(uint256)']);
 async function loadDeployment() {
   try {
     const response = await fetch('./deployment.json', { credentials: 'omit', cache: 'no-store' });
-    const file = await response.json();
-    if (file.status !== 'deployed' || file.chainId !== 1) return;
-    const token = address(file.token), hook = address(file.hook);
-    deployment = { token, hook };
-    $('launch-status').textContent = 'Deployment addresses supplied by the launch release. Verify bytecode and source before using them.';
+    if (!response.ok) throw new Error('Deployment metadata unavailable.');
+    deployment = parseDeployment(await response.json());
+    const { token, hook, sourceUrl } = deployment;
+    $('launch-status').textContent = 'LIVE / Ethereum mainnet · chain 1. Addresses from the verified launch record. Read current supply and burn totals below.';
+    $('burn-output').textContent = 'Not read yet. Refresh to fetch a snapshot from your selected Ethereum RPC.';
+    $('deployment-details').replaceChildren();
     for (const [label, value] of [['Token', token], ['Hook', hook]]) {
       const link = node('a', value); link.href = `https://etherscan.io/address/${value}`; link.target = '_blank'; link.rel = 'noopener noreferrer';
-      const dd = node('dd'); dd.append(link); $('deployment-details').append(node('dt', label), dd);
+      const copyButton = node('button', `COPY ${label.toUpperCase()}`);
+      copyButton.addEventListener('click', () => copy(value).catch(error => notice(error.message)));
+      const dd = node('dd', null, 'contract-address'); dd.append(link, copyButton); $('deployment-details').append(node('dt', label), dd);
     }
-    if (typeof file.sourceUrl === 'string') {
-      const url = new URL(file.sourceUrl);
-      if (url.protocol === 'https:' && url.hostname === 'github.com' && !url.username && !url.password) {
-        const link = node('a', 'Launch source on GitHub'); link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
-        const dd = node('dd'); dd.append(link); $('deployment-details').append(node('dt', 'Source'), dd);
-      }
-    }
-  } catch { $('launch-status').textContent = 'Deployment information unavailable. No live addresses have been assumed.'; }
+    const sourceLink = node('a', 'Verified contract source / exact launch commit');
+    sourceLink.href = sourceUrl; sourceLink.target = '_blank'; sourceLink.rel = 'noopener noreferrer';
+    const dd = node('dd'); dd.append(sourceLink); $('deployment-details').append(node('dt', 'Source'), dd);
+  } catch {
+    deployment = null; $('deployment-details').replaceChildren();
+    $('launch-status').textContent = 'Deployment information unavailable. No live addresses have been assumed.';
+  }
 }
 action('burn-stats', async () => {
   if (!deployment) throw new Error('Live stats are unavailable until the verified deployment addresses are published.');
   if (currentChain().id !== 1) throw new Error('Select Ethereum in network settings to read IMDB launch stats.');
-  const url = $('rpc-url').value;
-  await verifyChain(url, 1); await requireCode(url, deployment.token); await requireCode(url, deployment.hook);
-  const callHook = async method => hookRead.decodeFunctionResult(method, await rpc(url, 'eth_call', [{ to: deployment.hook, data: hookRead.encodeFunctionData(method) }, 'latest']))[0];
-  if (address(await callHook('token')) !== deployment.token) throw new Error('Hook token does not match the configured token.');
-  const lines = [];
-  for (const [method, label, unit] of [['totalFeesIMD', 'Fees collected', 'IMD'], ['totalBuybackIMD', 'Buybacks spent', 'IMD'], ['totalBurned', 'Burned by hook', 'IMDB'], ['pendingIMD', 'Awaiting buyback', 'IMD'], ['pendingIMDB', 'Awaiting burn', 'IMDB']]) {
-    lines.push(`${label}: ${formatUnits(await callHook(method), 18)} ${unit}`);
+  $('burn-output').textContent = 'Reading Ethereum…';
+  try {
+    const stats = await readTokenStats($('rpc-url').value, deployment);
+    const lines = [`Current supply: ${formatUnits(stats.supply, 18)} IMDB`, `Total burned by all holders: ${formatUnits(stats.burned, 18)} IMDB`];
+    for (const [method, label, unit] of [['totalFeesIMD', 'Fees collected', 'IMD'], ['totalBuybackIMD', 'Buybacks spent', 'IMD'], ['totalBurned', 'Burned by hook', 'IMDB'], ['pendingIMD', 'Awaiting buyback', 'IMD'], ['pendingIMDB', 'Awaiting burn', 'IMDB']]) {
+      lines.push(`${label}: ${formatUnits(stats[method], 18)} ${unit}`);
+    }
+    lines.push(`Ethereum block: ${BigInt(stats.block)}`, `Read at ${stats.checkedAt}`);
+    $('burn-output').textContent = lines.join('\n');
+  } catch (error) {
+    $('burn-output').textContent = 'Stats unavailable. Check the Ethereum RPC and try again. No zero balances or burn totals have been assumed.';
+    throw error;
   }
-  const supply = erc20.decodeFunctionResult('totalSupply', await rpc(url, 'eth_call', [{ to: deployment.token, data: erc20.encodeFunctionData('totalSupply') }, 'latest']))[0];
-  lines.push(`Current supply: ${formatUnits(supply, 18)} IMDB`, `Read at ${new Date().toISOString()}`);
-  $('burn-output').textContent = lines.join('\n');
 });
 window.addEventListener('beforeunload', event => { if (vault.count) { event.preventDefault(); event.returnValue = ''; } });
-window.addEventListener('pagehide', () => { vault.clear(); selected.clear(); balances.clear(); bundle = null; providers.clear(); discoverRequested = false; txStatus.clear(); clearExportPasswords(); $('restore-password').value = ''; });
+window.addEventListener('pagehide', () => { vault.clear(); selected.clear(); balances.clear(); bundle = null; providers.clear(); txStatus.clear(); clearExportPasswords(); $('restore-password').value = ''; $('restore-file').value = ''; });
 window.addEventListener('pageshow', event => { if (event.persisted) { renderProviders(); renderWallets(); resetPlan(); notice('Wallet memory cleared when leaving the page. Restore your encrypted backup to continue.'); } });
 page(); renderWallets(); modeChanged();
 renderPnl().catch(() => notice('Card preview unavailable. Use Render Card to try again.'));

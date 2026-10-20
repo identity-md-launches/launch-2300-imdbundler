@@ -48,7 +48,7 @@
 </section>
 <section id="manage" class="page" hidden>
   <div class="section-heading"><div><p class="eyebrow">YOUR FLEET / YOUR CUSTODY</p><h1>Wallet terminal<span class="cursor">_</span></h1></div><img src="./assets/pepe-focused.svg" width="110" height="110" alt="Focused frog at a laptop"></div>
-  <div class="toolbar"><button id="select-all">SELECT ALL</button><button id="select-none">SELECT NONE</button><button id="refresh-balances">REFRESH BALANCES</button><button id="clear">CLEAR / RESET</button></div>
+  <div class="toolbar"><button id="select-all">SELECT ALL</button><button id="select-none">SELECT NONE</button><button id="copy-addresses">COPY SELECTED ADDRESSES</button><button id="refresh-balances">REFRESH BALANCES</button><button id="clear">CLEAR / RESET</button></div>
   <p id="wallet-summary">No wallets loaded. Generate or restore a fleet on Home.</p>
   <div id="wallet-list" class="wallet-list"></div>
   <div class="grid-two">
@@ -77,7 +77,7 @@
       <div class="grid-two compact"><div><label for="slippage">Quote slippage allowance (%)</label><input id="slippage" inputmode="decimal" value="1"></div><div><label for="deadline">Deadline from now (minutes)</label><input id="deadline" type="number" value="10" min="1" max="60"></div></div>
       <button id="quote">READ QUOTE &amp; SET MINIMUM</button><p id="quote-info" class="small">Direct WETH → token pool only. The IMDB launch uses v4; use a reviewed v4 transaction in Advanced mode. Every wallet's trade changes the price for the next.</p>
     </div>
-    <div id="mint-fields" hidden><label for="mint-signature">Mint function (verify against the contract ABI)</label><select id="mint-signature"><option>mint(uint256)</option><option>mint(address,uint256)</option></select><label for="mint-quantity">NFT quantity per wallet</label><input id="mint-quantity" type="number" value="1" min="1" max="100"><p class="small">NFT contracts have different interfaces. These templates only work when the target implements the selected function. Allowlist proofs and marketplace orders require Advanced mode.</p></div>
+    <div id="mint-fields" hidden><label for="mint-signature">Mint function (verify against the contract ABI)</label><select id="mint-signature"><option value="mint(uint256)">mint(uint256)</option><option value="mint(address,uint256)">mint(address,uint256)</option></select><label for="mint-quantity">NFT quantity per wallet</label><input id="mint-quantity" type="number" value="1" min="1" max="100"><p class="small">NFT contracts have different interfaces. These templates only work when the target implements the selected function. Allowlist proofs and marketplace orders require Advanced mode.</p></div>
     <div id="raw-fields" hidden><label for="calldata">Reviewed calldata, including selector</label><textarea id="calldata" rows="5" spellcheck="false" placeholder="0x…"></textarea><p class="small">The same calldata is used for each wallet. Verify embedded recipients, amounts, approvals, deadlines and chain. A contract address alone does not identify a buy function.</p></div>
     <label class="check"><input id="review-target" type="checkbox"> I checked the target and interface. I will inspect and simulate each transaction before signing.</label>
     <button id="prepare-buy" class="primary">PREPARE SELECTED WALLETS ↗</button>
@@ -97,10 +97,10 @@
 <section id="token" class="page" hidden>
   <div class="section-heading"><div><p class="eyebrow">IMDBUNDLER / ETHEREUM</p><h1>The IMDB token<span class="cursor">_</span></h1></div><img src="./assets/pepe-smug.svg" width="110" height="110" alt="Smug frog"></div>
   <div class="stats"><article><span>INITIAL SUPPLY</span><strong>1,000,000,000</strong><small>IMDB · 18 decimals</small></article><article><span>SWAP FEE</span><strong>2%</strong><small>IMD → IMDB → burn</small></article><article><span>CONTROL</span><strong>IMMUTABLE</strong><small>No owner · no mint · no upgrades</small></article></div>
-  <article class="panel"><h2>Launch status</h2><p id="launch-status">Awaiting verified deployment. Live addresses will be published after the launch.</p><dl id="deployment-details"></dl>
+  <article class="panel"><h2>Live contracts</h2><p id="launch-status">Loading verified launch addresses…</p><dl id="deployment-details"></dl>
     <p>Paired with IMD on Uniswap v4. The 1.25% LP fee is separate from the hook's 2% fee. The factory allocates 10% to the agent distributor, 88% to pool liquidity, and 2% to the payer or policy treasury.</p>
     <p>The fee is 2% of settled IMD paid on buys and gross IMD received on sells, rounded down to whole minor units. Buybacks run in the same pool with a fixed price-movement bound. Unspent fees and temporarily unavailable burn tokens remain as claims; anyone can retry processing. ERC-20 transfers have no tax.</p>
-    <button id="burn-stats">REFRESH ON-CHAIN STATS</button><pre id="burn-output">Live stats are available after verified deployment.</pre>
+    <button id="burn-stats">REFRESH ON-CHAIN STATS</button><pre id="burn-output">Refresh to read current supply and burn totals on Ethereum.</pre>
   </article>
 </section>
 <section id="transaction-panel" class="panel" hidden>

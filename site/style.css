@@ -6,3 +6,8 @@
 ::selection { background: #00ff00; color: #000000; } option:checked { background: #00ff00; color: #000000; } input:autofill { -webkit-text-fill-color: #00ff00; box-shadow: 0 0 0 100px #000000 inset; }
 
 #notice { position: sticky; top: 10px; z-index: 3; background: #000000; }
+.contract-address { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.contract-address a { min-width: 0; overflow-wrap: anywhere; }
+.contract-address button { padding: 10px; font-size: .7rem; }
+.grid-two > *, .hero > *, .wallet-address { min-width: 0; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

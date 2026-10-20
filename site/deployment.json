@@ -1,4 +1,7 @@
 {
   "chainId": 1,
-  "status": "awaiting-verified-launch"
+  "status": "deployed",
+  "token": "0x9a26Dcb2BBD88D4C964043F2611d6cb0031c1Ee8",
+  "hook": "0x736361F1ffA0f2407724589aDDcDE144F047A0cC",
+  "sourceUrl": "https://github.com/identity-md-launches/launch-2300-imdbundler/tree/864305f630ca6ea7d49f3a7f6120f299386f94aa"
 }

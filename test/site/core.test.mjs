@@ -58,6 +58,20 @@ test('an individual exported Web3 keystore is compatible with ethers and contain
   assert.ok(!file.includes(wallet.privateKey));
   await assert.rejects(vault.keystore(-1, password));
 });
+test('the maximum 50-wallet fleet backs up and restores without truncation, and clear cancels a pending restore', async () => {
+  const original = new Vault(), restored = new Vault();
+  const addresses = original.generate(50);
+  assert.equal(new Set(addresses).size, 50);
+  const file = await original.encrypt(password);
+  assert.ok(file.length < 100_000);
+  assert.deepEqual(await restored.restore(file, password), addresses);
+  restored.clear();
+  const restoring = restored.restore(file, password);
+  restored.clear();
+  await assert.rejects(restoring, /Cannot restore/);
+  assert.equal(restored.count, 0);
+  assert.deepEqual(await restored.restore(file, password), addresses);
+});
 test('funding plans are exact, sender-specific and public', () => {
   const txs = fundingPlan({ wallets: [a, b], from: target, value: '0.1', chainId: 8453 });
   assert.equal(txs.length, 2); assert.equal(txs[1].from, target); assert.equal(txs[1].to, b);
