@@ -1,0 +1,30 @@
+{
+  "kind": "univ4_hook",
+  "hook": {
+    "contract": "IMDBHook",
+    "constructorArgs": [
+      "$poolManager",
+      "$token"
+    ],
+    "permissions": [
+      "beforeInitialize",
+      "beforeSwap",
+      "afterSwap",
+      "beforeSwapReturnDelta",
+      "afterSwapReturnDelta"
+    ]
+  },
+  "token": {
+    "contract": "IMDBToken",
+    "name": "IMDBundler",
+    "symbol": "IMDB",
+    "decimals": 18
+  },
+  "pool": {
+    "pairedCurrency": "0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7",
+    "fee": 12500,
+    "tickSpacing": 60,
+    "initialPrice": "79228162514264337593543950336"
+  },
+  "notes": "IMDBHook is an immutable Uniswap v4 hook for the IMDB/IMD pool with no owner, setters, pause or upgrade path. Constructor (IPoolManager manager_, IMDBToken token_): the pool manager written as $poolManager and the launch token as $token; the IMD pair address 0xd34a99bc0f67ae1bbd63c660e6d0b0dd03e263b7, the 12500 LP fee and tick spacing 60 are compile-time constants. beforeInitialize is enabled, accepts calls only from the PoolManager, returns its selector, and reverts WrongPool for any key other than {IMD, IMDB, fee 12500, tickSpacing 60, this hook}, so the predicted pool cannot be initialized before the hook has code; it does not check who initializes, so no $factory argument is needed. The hook takes exactly 2% of the IMD side of every swap on settled deltas, exact-in and exact-out: on buys the fee is 2% of the total IMD paid (including the fee), on sells 2% of the gross IMD output, rounded down. When IMD is the specified currency the fee is committed as a BeforeSwapDelta after a reverted self-quote (quoteSwap, callable only by the hook itself) finds the real fill; when IMD is the unspecified currency it is returned as the afterSwap delta. Fees are minted to the hook as ERC-6909 IMD claims and, inside the same afterSwap, burned and swapped back into IMDB in the same pool (hook-initiated swaps skip the hook's own callbacks) bounded to 100 basis points of sqrt-price movement from the post-trade price; purchased IMDB is taken from the PoolManager and destroyed with the token's caller-only burn. Any unspent IMD claim stays with the hook and anyone may call processFees() to retry the buyback and burn; it has no recipient, reward or admin. Counters totalFeesIMD, totalBuybackIMD and totalBurned are public for the site's burn stats. Liquidity and donate callbacks are disabled, so the factory's zero-change fee collection and liquidity removal pass untouched. IMDBToken is a fixed-supply OpenZeppelin ERC-20 (IMDBundler, IMDB, 18 decimals) with no constructor arguments, no owner and no mint; its only extra function burns the caller's own balance. Address flag mask 0x20cc. The pool's initialPrice is written as the launch facts give it; the deployer derives the opening price from the policy's opening market cap."
+}
