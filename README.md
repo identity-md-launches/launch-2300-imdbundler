@@ -11,34 +11,51 @@ A static multi-wallet workbench and an immutable IMDB / IMD Uniswap v4 buyback-a
 
 Contract source remains unchanged. The launch source is already in [the launch repository](https://github.com/identity-md-launches/launch-2300-imdbundler/tree/864305f630ca6ea7d49f3a7f6120f299386f94aa).
 
-**Hosting follow-up, 2026-10-20: incomplete.** The production export is in `dist/`, with its matching CAR in `release/imdbundler.car`. The authorized publishing command `imd site publish dist --name imdbundler` was attempted and exited 1: `not configured — run: imd pair --server <url>`. No pin or label activation was acknowledged. The public URL returned HTTP 404 / “No such site.” This is a prepared release, not a live-site claim. No credentials, pairing, contract changes, redeployment, or transactions were attempted.
+**Frontend repair, 2026-10-20:** the complete static export is in `dist/`, including the full `vendor/` directory. The matching IPFS CAR is in `release/imdbundler.car`. Both build entry points now verify local imports, the Ethers checksum, every copied asset, the asset manifest, and the complete CAR file tree. Nothing in the token, hook, deployed addresses, wallet cryptography or transaction routes was changed.
 
-## Install, rebuild and preview the production export
+The existing public site is **https://imdb.sites.imd.fun/**, named `imdb.site.identitymd.eth`. The pre-publication check reproduced its missing vendor files. This assignment delivers `dist/` for the submission publisher to pin and activate under that existing name. `release/hosting.json` records that target and the prepared CID; it is not a publication receipt. A working local release does not establish that the public site has switched versions. Run the hosted verification below after activation.
 
-The existing vanilla JavaScript application and local runtime assets remain in `site/`. No runtime dependency installation is needed. The additional hosting tools have their own manifest and lockfile in `web/`; the original root manifest and build configuration are unchanged.
+## Install, rebuild and preview
+
+Node **22+** is enough to build and serve the existing vanilla JavaScript app. Ethers **6.16.0**, its license/notices and all runtime images are already local; no runtime package installation or backend is required.
 
 ```sh
-# Production export + deterministic IPFS CAR, using Node 22+ only:
+npm run build
+# Equivalent production build:
 node web/build.mjs
-# Preview the actual export at http://127.0.0.1:4173/preview/:
+# Serve the actual export under a gateway-like subpath:
 node web/preview.mjs
-
-# Install the optional development/checking tools, then check them:
-npm ci --prefix web --ignore-scripts
-npm run typecheck --prefix web
+# Open http://127.0.0.1:4173/preview/
 npm test
-# Browser binaries and their system libraries must also be installed:
-npm exec --prefix web -- playwright install chromium webkit
-npm run validate --prefix web
-# Explicit Chromium-only check when WebKit's system libraries are unavailable:
-npm run validate --prefix web -- --chromium
 ```
 
-`npm run build --prefix web` is equivalent to `node web/build.mjs`. It replaces `dist/` with a byte-for-byte copy of `site/`, including local Ethers, eight frog SVGs, licenses, deployment metadata, and the PNG share image, and regenerates `release/`. Hash routes and relative runtime URLs work under a gateway subpath. The absolute Open Graph image URL intentionally targets the requested public domain.
+`npm run build`, `npm run build --prefix web` and `node scripts/package-site.mjs` all run the same production export. The build copies **every** file in `site/`, including nested `site/vendor/` files, to `dist/`, then adds `dist/asset-manifest.json` with byte sizes and SHA-256 hashes. It packages that exact export as the CAR, independently decodes it, and refuses missing assets or modified Ethers. All 26 source assets are preserved, plus the manifest. Build preflight checks run before replacing an existing export. Hash navigation and relative runtime/share asset URLs work under static gateway subpaths.
 
-On an **already authorized publisher**, `imd site publish dist --name imdbundler` bundles/pins the export and requests the label. After success, compare the returned CID to `release/cid.txt`, check publisher status, and verify the public HTTPS page and assets. Creating a CAR or a CID alone is insufficient. Do not include `web/node_modules/`, browser caches or temporary test files in a source submission.
+The original root manifest and the checking-tool manifest/lockfile in `web/` remain unchanged. For typecheck and browser checks, install the locked development tools outside the repository:
 
-Actual checks: production build passed; strict typecheck of the new hosting scripts passed; all **30 existing tests passed**; Chromium passed the primary interaction suite and five-page reflow checks at **320, 390, 750, 1024 and 1440px**. The design probe passed **13/16**, with deliberate terminal casing/monospace and a navigation false positive documented. WebKit could not launch because required system libraries are absent. A full strict JavaScript check of the legacy app and minified Ethers does not pass; the successful hosting typecheck does not cover that legacy code. Read [validation and limitations](docs/VALIDATION.md), [implemented design](DESIGN.md), and [browser evidence](docs/site-review/) for details. These are worker observations, not independent certification.
+```sh
+mkdir -p /tmp/imdb-check-tools
+cp web/package.json web/package-lock.json /tmp/imdb-check-tools/
+npm ci --prefix /tmp/imdb-check-tools --ignore-scripts --cache /tmp/imdb-npm-cache
+/tmp/imdb-check-tools/node_modules/.bin/tsc --project web/tsconfig.json --typeRoots /tmp/imdb-check-tools/node_modules/@types
+PLAYWRIGHT_BROWSERS_PATH=/tmp/imdb-browsers /tmp/imdb-check-tools/node_modules/.bin/playwright install chromium webkit
+IMD_PLAYWRIGHT=/tmp/imdb-check-tools/node_modules/playwright/index.mjs PLAYWRIGHT_BROWSERS_PATH=/tmp/imdb-browsers node web/validate.mjs --chromium
+# Omit --chromium to check both engines when WebKit system libraries are available.
+```
+
+The browser validator owns and closes its preview/browser, checks every exported file over HTTP, confirms all nine JS modules loaded, and walks generation, Manage, encrypted backup/restore, unsigned Snipe preparation, P&L downloads and navigation. It also deliberately removes Ethers in an isolated test to check the visible reload/error state. RPC responses in the unsigned-plan smoke test are mocks; no transaction is signed or sent. New release regressions are in `test/site/export.test.mjs` and are included in `npm test`.
+
+After the submission publisher activates the export, verify the real public files:
+
+```sh
+node web/verify-hosted.mjs https://imdb.sites.imd.fun/
+# On a Node 24 machine that needs its configured network proxy:
+node --use-env-proxy web/verify-hosted.mjs https://imdb.sites.imd.fun/
+```
+
+This checks status, JavaScript MIME types and SHA-256 hashes for **all 27 assets**, including `vendor/ethers.js`, rather than accepting an HTML fallback or a successful index alone. It exits nonzero on missing or stale files. `dist/` is the publication root; retain the complete tree when pinning it. Keep the required CAR, licenses and notices. No dependency directories, browser downloads, caches or registry archives belong in the submission.
+
+Actual final checks: production build passed; strict checking of the export/preview validators and hosted verifier passed; **33/33 tests passed**; Chromium passed the interaction suite and all five views at **320, 390, 750, 1024 and 1440px**, with no normal-load console or resource failures. The design probe passed **13/16**, with the established terminal casing/monospace and one navigation false positive documented. WebKit could not launch because its system libraries are absent. Full legacy-app static typing, real external-wallet signatures and physical-device/screen-reader checks are not claimed. See [validation and limitations](docs/VALIDATION.md), [implemented design](DESIGN.md), and [browser evidence](docs/site-review/).
 
 ## Run and check
 
@@ -54,7 +71,7 @@ node scripts/package-site.mjs
 node scripts/serve.mjs
 ```
 
-The last command serves the static site at `http://127.0.0.1:4173`. It only serves files and accepts GET/HEAD. It never accepts wallet data. `npm test`, `npm run build`, and `npm run serve` are equivalent conveniences; do not run `npm install`.
+The last command serves the source site at `http://127.0.0.1:4173`. It only serves files and accepts GET/HEAD. It never accepts wallet data. `npm test` and `npm run serve` are equivalent conveniences for tests and source preview; `npm run build` creates the verified production export and CAR as described above. No root package installation is needed.
 
 The protected Foundry configuration pins seed `0xb38a9ff495bdd18e650f7fcfaf78750fb7edd57ffc4f545ce5d371877a55407a`. The explicit command also tests the follow-up assignment's seed. Fuzz tests run 256 cases per test; invariant campaigns cover both currency orderings with real freshly deployed v4 PoolManagers. A regression reproduces a dust trade at a tick boundary and checks that the invariant harness generates a valid reverse price limit. See [validation and security review](docs/SECURITY.md).
 

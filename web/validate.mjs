@@ -4,14 +4,22 @@ import assert from 'node:assert/strict';
 import { readFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium, webkit } from 'playwright';
 import { createPreview } from './preview.mjs';
 import { Interface } from '../site/vendor/ethers.js';
+import { checkExport } from './export-check.mjs';
+import { checkCar } from './car-check.mjs';
+
+// Optional explicit module path keeps all checking dependencies outside the repository.
+const { chromium, webkit } = process.env.IMD_PLAYWRIGHT
+  ? await import(process.env.IMD_PLAYWRIGHT)
+  : await import('playwright');
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const evidence = resolve(root, 'test/scratch/browser-check');
 await mkdir(evidence, { recursive: true });
 const deployment = JSON.parse(await readFile(resolve(root, 'dist/deployment.json'), 'utf8'));
+const exported = await checkExport(resolve(root, 'dist'));
+checkCar(await readFile(resolve(root, 'release/imdbundler.car')), exported);
 const server = await createPreview();
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const url = `http://127.0.0.1:${server.address().port}/preview/`;
@@ -23,6 +31,13 @@ try {
     const browser = await engine.launch({ headless: true });
     try {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+      // Every file, including vendor notices, must actually be served with its exact bytes.
+      for (const [path, bytes] of exported) {
+        const response = await context.request.get(new URL(path, url).href);
+        assert.equal(response.status(), 200, `Export resource: ${path}`);
+        assert.deepEqual(await response.body(), bytes, `Served bytes: ${path}`);
+        if (path.endsWith('.js')) assert.match(response.headers()['content-type'], /(?:text|application)\/javascript/);
+      }
       if (name === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write']);
       const page = await context.newPage();
       const errors = [], failed = [], rpcCalls = [];
@@ -40,6 +55,10 @@ try {
       const click = async id => { await page.locator(`#${id}`).click(); await idle(); };
       const navigate = async hash => { await page.locator(`nav a[href="#${hash}"]`).click(); await page.locator(`#${hash}`).waitFor({ state: 'visible' }); };
       await page.goto(url);
+      await page.waitForFunction(() => document.documentElement.dataset.appState === 'ready');
+      for (const module of ['bootstrap.js', 'app.js', 'vault.js', 'chains.js', 'transactions.js', 'rpc.js', 'deployment.js', 'providers.js', 'vendor/ethers.js']) {
+        assert.ok(await page.evaluate(path => performance.getEntriesByType('resource').some(entry => entry.name.endsWith(`/${path}`)), module), `Module loaded: ${module}`);
+      }
       await page.locator('#launch-status').filter({ hasText: 'LIVE' }).waitFor({ state: 'attached' });
       const bounds = await page.locator('#generate').boundingBox();
       assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844, 'Generate must be on the first 390px screen');
@@ -62,6 +81,11 @@ try {
       assert.equal(new Set(addresses).size, 3);
       assert.ok(addresses.every(address => /^0x[0-9a-fA-F]{40}$/.test(address)));
       assert.equal(rpcCalls.length, 0, 'Generation sends no RPC');
+      await click('select-none');
+      assert.match(await page.locator('#wallet-summary').innerText(), /0 selected/);
+      await click('select-all');
+      assert.match(await page.locator('#wallet-summary').innerText(), /3 selected/);
+      await page.screenshot({ path: resolve(evidence, `${name}-390-manage.png`), fullPage: true });
       if (name === 'chromium') {
         await click('copy-addresses');
         assert.equal(await page.evaluate(() => navigator.clipboard.readText()), addresses.join('\n'));
@@ -97,6 +121,7 @@ try {
       assert.equal(await page.locator('.transaction').count(), 0, 'Editing clears a stale plan');
 
       await navigate('pnl');
+      assert.equal(await page.locator('#notice').isVisible(), false, 'Snipe messages must not follow visitors into P&L');
       for (const [exit, pose] of [['0.015', 'happy'], ['0.005', 'sad'], ['0.01', 'thinking']]) {
         await page.locator('#pnl-exit').fill(exit);
         await click('render-pnl');
@@ -145,8 +170,21 @@ try {
       assert.deepEqual(await page.locator('.wallet-address').evaluateAll(els => els.map(el => el.firstChild.textContent)), addresses);
       assert.deepEqual(errors, [], 'No browser console/script errors');
       assert.deepEqual(failed, [], 'No failed export resources');
-      console.log(`${name}: PASS — first screen; keyboard generation; encrypted backup/restore; unsigned snipe JSON; 1200×800 PNG; addresses; five pages at 320/390/750/1024/1440; reset focus; reduced motion; zero console/resource failures. RPC mocked, no signatures.`);
+      console.log(`${name}: PASS — all ${exported.size} release assets served byte-for-byte; all nine modules loaded; first screen; keyboard generation; selection; encrypted backup/restore; unsigned snipe JSON; 1200×800 PNG; addresses; five pages at 320/390/750/1024/1440; reset focus; reduced motion; zero console/resource failures. RPC mocked, no signatures.`);
       await context.close();
+
+      // Reproduce the reported production failure in isolation; the UI must explain recovery.
+      const brokenContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      const brokenPage = await brokenContext.newPage();
+      await brokenPage.route('**/vendor/ethers.js', route => route.fulfill({ status: 404, contentType: 'text/plain', body: 'Not found' }));
+      await brokenPage.goto(url);
+      await brokenPage.waitForFunction(() => document.documentElement.dataset.appState === 'failed');
+      assert.match(await brokenPage.locator('#notice[role="alert"]').innerText(), /could not load.*Reload/s);
+      assert.equal(await brokenPage.locator('#generate').isDisabled(), true);
+      assert.equal(await brokenPage.getByRole('link', { name: 'Reload wallet tools' }).count(), 1);
+      await brokenPage.screenshot({ path: resolve(evidence, `${name}-missing-vendor.png`), fullPage: false });
+      await brokenContext.close();
+      console.log(`${name}: PASS — missing vendor regression shows an alert and reload link; no usable-looking wallet action remains.`);
     } finally { await browser.close(); }
   }
 } finally { await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }

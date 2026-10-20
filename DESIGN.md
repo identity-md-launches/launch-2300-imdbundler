@@ -2,7 +2,7 @@
 
 ## Overview
 
-imdbundler is a client-side wallet and unsigned-transaction workbench. Preserve its existing pure-black and lime-green cyber/terminal appearance and locally drawn Pepe visuals. Home prioritizes generation; Manage, Snipe, P&L and IMDB are hash-routed views in `site/index.html`. Runtime behavior is in `site/app.js`; shared styling is in `site/style.css`. The final declarations in that stylesheet override the original compact rules above them.
+imdbundler is a client-side wallet and unsigned-transaction workbench. Preserve its existing pure-black and lime-green cyber/terminal appearance and locally drawn Pepe visuals. Home prioritizes generation; Manage, Snipe, P&L and IMDB are hash-routed views in `site/index.html`. Module startup/recovery is in `site/bootstrap.js`; runtime behavior is in `site/app.js`; shared styling is in `site/style.css`. The final declarations in that stylesheet override the original compact rules above them.
 
 ## Colors
 
@@ -33,7 +33,7 @@ Prose line-height is 1.65; hints 1.6; headings 1.08. Headings balance wrapping. 
 
 Header, navigation, content and footer share a maximum 1200px width. Desktop content has 30px side padding and 35px top padding. `.grid-two` uses equal columns with a 20px gap; `.compact` uses 16px. Panels have 25px padding and 20px bottom separation. Controls use a minimum 44px height. `.toolbar` wraps actions.
 
-At 750px and below, content side padding is 18px, panels use 18px padding, two-column grids and stats become single-column, and all five navigation links share a visible five-column row. The hero reduces to a 180px minimum height. At 400px and below its large artwork hides and generation controls stack; frogs remain in the brand and generation panel. Wallet rows wrap the copy action below the address. The 390×844 first screen contains the product and Generate wallets button. Chromium checked all five pages at 320, 390, 750, 1024 and 1440px without document overflow.
+At 750px and below, content side padding is 18px, panels use 18px padding, two-column grids and stats become single-column, and all five navigation links share a visible five-column row. The hero reduces to a 180px minimum height. At 400px and below its large artwork hides and generation controls stack; frogs remain in the brand and generation panel. Wallet rows wrap the copy action below the address. The 390×844 first screen contains the product and Generate wallets button. Chromium checked all five pages at 320, 390, 750, 1024 and 1440px without document overflow in this repair. The final 390×844 screen places Generate wallets at approximately y=660–705, above the fold.
 
 ## Elevation & Depth
 
@@ -50,8 +50,9 @@ Square corners are intentional. Borders are normally 1px, with dashed borders fo
 - **Fields:** persistent bound labels, 16px input text, native selectors, file input and checkboxes. Error notices provide actionable text. Field-level error associations are not implemented throughout the legacy app.
 - **Panels:** `.panel`, `.panel-heading`, `.grid-two`, `.toolbar`; use these existing patterns for grouping and aligned controls.
 - **Wallet rows:** `.wallet`, `.wallet-address`, `.balance`; complete addresses, selection checkboxes and copy actions. An empty state directs visitors to generation or restoration.
-- **Review:** native `<dialog>` supports Escape and trapped focus. The app restores the trigger after busy controls re-enable (`site/app.js:32`). Reset requires explicit confirmation.
+- **Review:** native `<dialog>` supports Escape and trapped focus. The app restores the trigger after busy controls re-enable (`site/app.js:33`). Reset requires explicit confirmation.
 - **P&L card:** responsive canvas, render/download buttons, descriptive text and local happy/sad/thinking frog assets. Downloads are real 1200×800 PNGs, labeled self-reported.
+- **Startup recovery:** `site/bootstrap.js` loads the app. A failed transitive import displays the existing bordered `#notice` region as an alert, provides a real reload link and disables unavailable form actions. Normal notices are cleared on the next action or when leaving their view (`site/app.js:26`, `site/app.js:81`). This error state was reproduced with Ethers returning 404.
 - **Token panel:** exact deployment metadata and explorer links, copy controls, explicit on-demand RPC stats; failures display unavailable data.
 
 Visible keyboard focus is a 2px `--bright` outline offset by 4px. The skip link is first in the keyboard order. Reduced-motion settings suppress smooth scrolling. No animation, external font, image service or key backend was added.
@@ -61,3 +62,5 @@ Visible keyboard focus is a 2px `--bright` outline offset by 4px. The skip link 
 Reuse the existing tokens, native elements and panel/grid patterns. Keep a primary action prominent, complete addresses selectable, controls at least 44px tall where the pattern permits, and all runtime assets local. Keep the lime/black identity, explicit transaction review and local key handling. A new view should follow `.page` with one visible page heading, bound labels and an entry in the hash-navigation handler. Do not invent another font, palette, truncation scheme, automatic wallet connection or transaction route.
 
 The review used Jakub Krehel's Better Interface principles (MIT) and Paul Bakaus's Impeccable documentation method (Apache-2.0), at the pinned revisions supplied with this task. Coverage and unperformed checks are recorded in `docs/VALIDATION.md`.
+
+The final source retains the existing CSS, six type roles, black/lime palette and local artwork. The page preloads the locally bundled Ethers module; its title, description, favicon, Open Graph title and local share image are in `site/index.html:9`. The canonical public page is `https://imdb.sites.imd.fun/`. Rendered checks were performed on the production export under `/preview/`; public-origin activation and WebKit remain limitations in the validation record.

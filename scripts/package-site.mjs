@@ -4,6 +4,7 @@ import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 const concat = (...parts) => Buffer.concat(parts);
 export function varint(value) {
   let n = BigInt(value); const bytes = [];
@@ -67,6 +68,9 @@ export async function buildSite(source = resolve('site'), output = resolve('rele
   return result;
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const result = await buildSite();
-  console.log(`IPFS release prepared locally: ${result.cid}\n${result.blocks} blocks / ${result.car.length} bytes\nImport release/imdbundler.car into an authorized IPFS pinning service. This command does not publish.`);
+  // The original root `npm run build` must use the same complete, verified export.
+  // A child process avoids a top-level-await import cycle with web/build.mjs.
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('../web/build.mjs', import.meta.url))], { stdio: 'inherit' });
+  if (result.error) throw result.error;
+  process.exitCode = result.status ?? 1;
 }

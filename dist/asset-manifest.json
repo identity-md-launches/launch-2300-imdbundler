@@ -1,0 +1,137 @@
+{
+  "format": "imdbundler-static-assets",
+  "version": 1,
+  "entry": "./index.html",
+  "files": [
+    {
+      "path": "./LICENSE.txt",
+      "bytes": 1080,
+      "sha256": "a6d3bb731f5dd6ac2378ce31f01297952e20b7df30d7dad756936b140ab06d64"
+    },
+    {
+      "path": "./_headers",
+      "bytes": 398,
+      "sha256": "78502181352c5e74fbeaf690503321b6ef494edff5fd1dee006492e1a0ea160d"
+    },
+    {
+      "path": "./app.js",
+      "bytes": 27538,
+      "sha256": "273b4410ef0d44bb4c8db2a4603f08c98d71d73a8ddb6a9ba1cf7670c693c1e0"
+    },
+    {
+      "path": "./assets/LICENSE.txt",
+      "bytes": 443,
+      "sha256": "524561cd6ee38ddab6b52682705d2991aa06e76172f32dc7d4dc675719511f57"
+    },
+    {
+      "path": "./assets/pepe-dancing.svg",
+      "bytes": 1044,
+      "sha256": "5b37cb0e4eb41495c9578993c90f297eacef92235443bc7a4e06d638b0472810"
+    },
+    {
+      "path": "./assets/pepe-focused.svg",
+      "bytes": 911,
+      "sha256": "9ebf388bb8d8a15b09e1c5c0279213ae509a9bce407b6e351a99ef053de53f75"
+    },
+    {
+      "path": "./assets/pepe-happy.svg",
+      "bytes": 785,
+      "sha256": "2346dc347d9956ec914ad6d1ff93f4569744f2698b48629e9ca58e7e6eef688c"
+    },
+    {
+      "path": "./assets/pepe-sad.svg",
+      "bytes": 892,
+      "sha256": "1fa9981fab9e4be01c00b01d5bc4c56eea35ebc2539e5a24cfd991c5d224820b"
+    },
+    {
+      "path": "./assets/pepe-sleepy.svg",
+      "bytes": 786,
+      "sha256": "e8ba11470a9b7c6e032cd1214e0b257e9f68c51c00467ffe54c2e850e0116268"
+    },
+    {
+      "path": "./assets/pepe-smug.svg",
+      "bytes": 812,
+      "sha256": "b5b0aab3b83e22251cf6e68a7f04858613921ce6e22c4b635ecd2f3301df25c3"
+    },
+    {
+      "path": "./assets/pepe-sunglasses.svg",
+      "bytes": 927,
+      "sha256": "81ad62bfffbad5c291f13c2612a5957bd30a6e9e330df6a9fabda03d0a7762f0"
+    },
+    {
+      "path": "./assets/pepe-thinking.svg",
+      "bytes": 928,
+      "sha256": "bc98fdafab760eda92d8cd04ed2d3150570a0653b473bb07e5ee00b189f9039d"
+    },
+    {
+      "path": "./assets/share.png",
+      "bytes": 60429,
+      "sha256": "23803bef4c52526a8f488637ae9fe15841af63aa8be31b701bc9d90fcf844d13"
+    },
+    {
+      "path": "./bootstrap.js",
+      "bytes": 781,
+      "sha256": "1411e571be83ad99f742878a1499f051b7685884100ea8d16ce06f3a21315764"
+    },
+    {
+      "path": "./chains.js",
+      "bytes": 800,
+      "sha256": "4d1bcc3feceafb3bfea463dc22c7012a01ede4644e3e147bd48a5285815acb1e"
+    },
+    {
+      "path": "./deployment.js",
+      "bytes": 3272,
+      "sha256": "61a6602eacdd6413f6f64456a98ad2fd646b162af92b90ffce4e77ad433a7a97"
+    },
+    {
+      "path": "./deployment.json",
+      "bytes": 283,
+      "sha256": "8678d93d97fda3e9cc101e6cf8e86ce891ec32d93fbbceb5b43d3b31dcfa4efd"
+    },
+    {
+      "path": "./index.html",
+      "bytes": 15457,
+      "sha256": "bee8683922ec9171964f192b4d10baa149781d7ef5f224a71dc941f22a8cffa5"
+    },
+    {
+      "path": "./providers.js",
+      "bytes": 1001,
+      "sha256": "50685e6dc02c8a2e7c6f0ced484f43289c65bbee79874053a6954cb566e518a3"
+    },
+    {
+      "path": "./rpc.js",
+      "bytes": 4319,
+      "sha256": "348f036668efdf698a89483c899f19b463ba579e61b626ed8a23ec0e814e8af8"
+    },
+    {
+      "path": "./style.css",
+      "bytes": 11274,
+      "sha256": "4e139bce39b0432d2cd5c69105fe41c3a7703f496fc28347e89d350120d96e54"
+    },
+    {
+      "path": "./transactions.js",
+      "bytes": 5805,
+      "sha256": "72fc159404ce35e293a9cfffb64aa4ad65dc9f2ca3aeaad563bea7700870db84"
+    },
+    {
+      "path": "./vault.js",
+      "bytes": 5256,
+      "sha256": "7d0add9885b4ed65b692d353ca00b51e349251867cc99ff2cb00106366dc08c4"
+    },
+    {
+      "path": "./vendor/ethers.LICENSE.md",
+      "bytes": 1075,
+      "sha256": "44eea86637405118248327fbe9d9fa95d04c7a57221c7e8c155f736db9f1b612"
+    },
+    {
+      "path": "./vendor/ethers.NOTICES.txt",
+      "bytes": 6828,
+      "sha256": "4f59ff265c571047153b8f11eb21311db71dfa8023efc90fc25b0bc4f9676657"
+    },
+    {
+      "path": "./vendor/ethers.js",
+      "bytes": 517594,
+      "sha256": "2cf48c79d5f9136499527d43e5dc662071d41a000fd822de105533ab7502e950"
+    }
+  ]
+}

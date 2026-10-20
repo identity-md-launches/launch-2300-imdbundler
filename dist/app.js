@@ -14,6 +14,7 @@ const balances = new Map();
 let bundle = null, deployment = null, working = false, cardReady = false;
 let dialogResolve;
 let busyFocus = null, reviewFocus = null;
+let noticeRoute = location.hash;
 const txStatus = new Map();
 
 function node(tag, text, className) {
@@ -22,7 +23,7 @@ function node(tag, text, className) {
   if (className) element.className = className;
   return element;
 }
-function notice(message) { $('notice').hidden = false; $('notice').textContent = message; }
+function notice(message) { noticeRoute = location.hash; $('notice').hidden = false; $('notice').textContent = message; }
 function currentChain() { return chainById(Number($('chain').value)); }
 function selectedWallets() {
   const wallets = vault.addresses.filter(a => selected.has(a));
@@ -49,6 +50,7 @@ function busy(on) {
 function action(id, fn) {
   $(id).addEventListener('click', async () => {
     if (working) return;
+    $('notice').hidden = true;
     busy(true);
     try { await fn(); }
     catch (error) { notice(error instanceof Error ? error.message : 'The action failed. Please try again.'); }
@@ -79,6 +81,7 @@ async function copy(text) {
 function page() {
   const id = location.hash.slice(1) || 'home';
   const name = ['home', 'manage', 'snipe', 'pnl', 'token'].includes(id) ? id : 'home';
+  if (noticeRoute !== location.hash) $('notice').hidden = true;
   for (const section of document.querySelectorAll('.page')) section.hidden = section.id !== name;
   for (const link of document.querySelectorAll('[data-page]')) {
     if (link.dataset.page === name) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');

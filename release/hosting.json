@@ -1,7 +1,10 @@
 {
   "ipfs": true,
-  "label": "imdbundler",
-  "url": "https://imdbundler.sites.imd.fun/",
-  "cid": "bafybeihck723o3ckc7tdsep6wc4cncj7glazijtfnn6v5f7dsym6yeezce",
-  "note": "Publication intent only. A locally generated CID does not establish a pin or active label."
+  "label": "imdb",
+  "name": "imdb.site.identitymd.eth",
+  "url": "https://imdb.sites.imd.fun/",
+  "cid": "bafybeibfsbsxtq4xrub6r3te3sohdqnnvt667f3hd7tzto6vtff7yy57qq",
+  "entry": "dist/index.html",
+  "assetManifest": "dist/asset-manifest.json",
+  "note": "Prepared release for the existing site. Pin and name activation are performed by the submission publisher; this file is not a publication receipt."
 }
