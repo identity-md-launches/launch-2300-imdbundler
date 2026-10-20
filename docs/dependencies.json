@@ -1,0 +1,152 @@
+[
+  {
+    "repository": "Uniswap/v4-core",
+    "commit": "46c6834698c48bc4a463a86d8420f4eb1d7f3b75",
+    "path": "lib/v4-core"
+  },
+  {
+    "repository": "foundry-rs/forge-std",
+    "commit": "77041d2ce690e692d6e03cc812b57d1ddaa4d505",
+    "path": "lib/forge-std"
+  },
+  {
+    "repository": "OpenZeppelin/openzeppelin-contracts",
+    "commit": "69c8def5f222ff96f2b5beff05dfba996368aa79",
+    "path": "lib/openzeppelin-contracts"
+  },
+  {
+    "package": "ethers",
+    "version": "6.16.0",
+    "tarball": "https://registry.npmjs.org/ethers/-/ethers-6.16.0.tgz",
+    "integrity": "sha512-U1wulmetNymijEhpSEQ7Ct/P/Jw9/e7R1j5XIbPRydgV2DjLVMsULDlNksq3RQnFgKoLlZf88ijYtWEXcPa07A==",
+    "file": "site/vendor/ethers.js",
+    "sha256": "2cf48c79d5f9136499527d43e5dc662071d41a000fd822de105533ab7502e950"
+  },
+  {
+    "package": "linkedom",
+    "version": "0.18.12",
+    "tarball": "https://registry.npmjs.org/linkedom/-/linkedom-0.18.12.tgz",
+    "integrity": "sha512-jalJsOwIKuQJSeTvsgzPe9iJzyfVaEJiEXl+25EkKevsULHvMJzpNqwvj1jOESWdmgKDiXObyjOYwlUqG7wo1Q==",
+    "file": "test/vendor/linkedom.js",
+    "sha256": "196efeb17c260e001979dbc54a3c30e701a881c6e8a3eedaddc5ad83c99ee5ff"
+  },
+  {
+    "repository": "transmissions11/solmate",
+    "commit": "89365b880c4f3c786bdd453d4b8e8fe410344a69",
+    "path": "lib/solmate",
+    "included": [
+      "src/auth/Owned.sol",
+      "LICENSE"
+    ]
+  },
+  {
+    "notices": "site/vendor/ethers.NOTICES.txt",
+    "sources": [
+      {
+        "package": "@adraffy/ens-normalize",
+        "version": "1.10.1",
+        "licenseSource": "https://registry.npmjs.org/@adraffy/ens-normalize/-/ens-normalize-1.10.1.tgz"
+      },
+      {
+        "package": "@noble/curves",
+        "version": "1.2.0",
+        "licenseSource": "https://registry.npmjs.org/@noble/curves/-/curves-1.2.0.tgz"
+      },
+      {
+        "package": "@noble/hashes",
+        "version": "1.3.2",
+        "licenseSource": "https://registry.npmjs.org/@noble/hashes/-/hashes-1.3.2.tgz"
+      },
+      {
+        "package": "aes-js",
+        "version": "4.0.0-beta.5",
+        "licenseSource": "https://registry.npmjs.org/aes-js/-/aes-js-4.0.0-beta.5.tgz"
+      },
+      {
+        "package": "tslib",
+        "version": "2.7.0",
+        "licenseSource": "https://registry.npmjs.org/tslib/-/tslib-2.7.0.tgz"
+      },
+      {
+        "package": "ws",
+        "version": "8.17.1",
+        "licenseSource": "https://registry.npmjs.org/ws/-/ws-8.17.1.tgz"
+      }
+    ]
+  },
+  {
+    "notices": "test/vendor/linkedom.NOTICES.txt",
+    "sources": [
+      {
+        "package": "boolbase",
+        "version": "1.0.0",
+        "licenseSource": "https://registry.npmjs.org/boolbase/-/boolbase-1.0.0.tgz"
+      },
+      {
+        "package": "css-select",
+        "version": "5.1.0",
+        "licenseSource": "https://registry.npmjs.org/css-select/-/css-select-5.1.0.tgz"
+      },
+      {
+        "package": "css-what",
+        "version": "6.1.0",
+        "licenseSource": "https://registry.npmjs.org/css-what/-/css-what-6.1.0.tgz"
+      },
+      {
+        "package": "cssom",
+        "version": "0.5.0",
+        "licenseSource": "https://registry.npmjs.org/cssom/-/cssom-0.5.0.tgz"
+      },
+      {
+        "package": "dom-serializer",
+        "version": "2.0.0",
+        "licenseSource": "https://registry.npmjs.org/dom-serializer/-/dom-serializer-2.0.0.tgz"
+      },
+      {
+        "package": "domelementtype",
+        "version": "2.3.0",
+        "licenseSource": "https://registry.npmjs.org/domelementtype/-/domelementtype-2.3.0.tgz"
+      },
+      {
+        "package": "domhandler",
+        "version": "5.0.3",
+        "licenseSource": "https://registry.npmjs.org/domhandler/-/domhandler-5.0.3.tgz"
+      },
+      {
+        "package": "domutils",
+        "version": "3.2.2",
+        "licenseSource": "https://registry.npmjs.org/domutils/-/domutils-3.2.2.tgz"
+      },
+      {
+        "package": "entities",
+        "version": "4.5.0",
+        "licenseSource": "https://registry.npmjs.org/entities/-/entities-4.5.0.tgz"
+      },
+      {
+        "package": "entities",
+        "version": "6.0.0",
+        "licenseSource": "https://registry.npmjs.org/entities/-/entities-6.0.0.tgz"
+      },
+      {
+        "package": "html-escaper",
+        "version": "3.0.3",
+        "licenseSource": "https://registry.npmjs.org/html-escaper/-/html-escaper-3.0.3.tgz"
+      },
+      {
+        "package": "htmlparser2",
+        "version": "10.0.0",
+        "licenseSource": "https://registry.npmjs.org/htmlparser2/-/htmlparser2-10.0.0.tgz"
+      },
+      {
+        "package": "nth-check",
+        "version": "2.1.1",
+        "licenseSource": "https://registry.npmjs.org/nth-check/-/nth-check-2.1.1.tgz"
+      },
+      {
+        "package": "uhyphen",
+        "version": "0.2.0",
+        "licenseSource": "https://registry.npmjs.org/uhyphen/-/uhyphen-0.2.0.tgz"
+      }
+    ]
+  }
+]

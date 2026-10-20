@@ -1,0 +1,5 @@
+/out/
+/cache/
+/test/scratch/
+/artifacts/
+*.log

@@ -1,0 +1,6 @@
+The eight original frog SVG illustrations in this directory were created for imdbundler.
+The author dedicates the original artwork to the public domain under CC0 1.0 Universal:
+https://creativecommons.org/publicdomain/zero/1.0/
+These are independently drawn meme-inspired frogs, not copies of an existing Pepe image.
+No affiliation with or endorsement by Matt Furie is claimed. Third-party names and marks
+are not licensed by this dedication.

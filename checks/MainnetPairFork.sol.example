@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.26;
+import {Test} from "forge-std/Test.sol";
+import {IMDBToken} from "../../src/IMDBToken.sol";
+import {IMDBHook} from "../../src/IMDBHook.sol";
+import {HookFlags} from "../../src/HookFlags.sol";
+import {TestRouter} from "../mocks/TestRouter.sol";
+import {PoolManager} from "v4-core/src/PoolManager.sol";
+import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
+import {PoolKey} from "v4-core/src/types/PoolKey.sol";
+import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
+import {TickMath} from "v4-core/src/libraries/TickMath.sol";
+import {BalanceDelta} from "v4-core/src/types/BalanceDelta.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+contract ForkRehearsalTest is Test {
+    address constant IMD = 0xD34a99Bc0f67aE1bbd63C660e6d0b0dd03E263B7;
+    IMDBToken token; IMDBHook hook; TestRouter router; PoolKey key;
+    function setUp() public {
+        vm.createSelectFork("https://ethereum-rpc.publicnode.com", 26234425);
+        assertEq(IERC20Metadata(IMD).symbol(), "IMD");
+        assertEq(IERC20Metadata(IMD).decimals(), 18);
+        IPoolManager manager = IPoolManager(address(new PoolManager(address(this))));
+        token = new IMDBToken();
+        bytes32 hash = keccak256(abi.encodePacked(type(IMDBHook).creationCode, abi.encode(manager, token)));
+        for (uint256 i; i < 200000; i++) {
+            bytes32 salt = bytes32(i);
+            address predicted = address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, hash)))));
+            if (!HookFlags.matches(predicted, 0x20cc)) continue;
+            hook = new IMDBHook{salt: salt}(manager, token); break;
+        }
+        require(address(hook) != address(0)); key = hook.poolKey();
+        manager.initialize(key, 79228162514264337593543950336);
+        router = new TestRouter(manager);
+        token.transfer(address(router), 900_000_000 ether);
+        deal(IMD, address(router), 100_000_000 ether);
+        router.modify(key, -887220, 887220, 1_000_000 ether);
+    }
+    function trade(bool buy, bool exactIn) internal {
+        bool zeroForOne = buy == hook.pairIsCurrency0();
+        BalanceDelta d = router.swap(key, SwapParams(zeroForOne, exactIn ? -int256(100 ether) : int256(100 ether), zeroForOne ? TickMath.MIN_SQRT_PRICE+1 : TickMath.MAX_SQRT_PRICE-1));
+        int256 p = hook.pairIsCurrency0() ? int256(d.amount0()) : int256(d.amount1());
+        uint256 fee = hook.totalFeesIMD();
+        assertEq(fee, buy ? uint256(-p)/50 : (uint256(p)+fee)/50);
+        assertGt(hook.totalBurned(), 0);
+        assertEq(hook.totalFeesIMD(), hook.totalBuybackIMD()+hook.pendingIMD());
+        assertEq(token.INITIAL_SUPPLY()-token.totalSupply(), hook.totalBurned());
+        router.modify(key, -887220, 887220, 0);
+    }
+    function test_forkBuyExactIn() public { trade(true,true); }
+    function test_forkBuyExactOut() public { trade(true,false); }
+    function test_forkSellExactIn() public { trade(false,true); }
+    function test_forkSellExactOut() public { trade(false,false); }
+}

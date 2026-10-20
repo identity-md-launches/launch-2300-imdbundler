@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="focused frog">
+<title>Focused frog — original imdbundler artwork</title>
+<g fill="#000" stroke="#00ff00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M56 290 Q54 233 91 222 L208 222 Q250 236 248 290Z"/>
+<path d="M60 128 Q54 80 83 69 Q112 39 148 71 Q186 39 217 69 Q248 82 239 131 Q266 156 241 199 Q210 232 150 234 Q86 235 59 203 Q31 163 60 128Z"/>
+<ellipse cx="113" cy="105" rx="35" ry="33"/><ellipse cx="185" cy="103" rx="36" ry="34"/><path d="M81 85 L141 104 M159 103 L218 82"/><circle cx="120" cy="113" r="9" fill="#00ff00"/><circle cx="183" cy="112" r="9" fill="#00ff00"/><path d="M65 146 Q77 133 91 143 M209 141 Q224 131 238 144"/><path d="M87 187 L215 182 M102 195 L198 191"/><path d="M64 241 L78 283 L236 283 L249 241Z"/><path d="M136 253 L148 262 L138 271 M159 271 L178 271"/>
+</g></svg>

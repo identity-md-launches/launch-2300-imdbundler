@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="thinking frog">
+<title>Thinking frog — original imdbundler artwork</title>
+<g fill="#000" stroke="#00ff00" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M56 290 Q54 233 91 222 L208 222 Q250 236 248 290Z"/>
+<path d="M60 128 Q54 80 83 69 Q112 39 148 71 Q186 39 217 69 Q248 82 239 131 Q266 156 241 199 Q210 232 150 234 Q86 235 59 203 Q31 163 60 128Z"/>
+<ellipse cx="113" cy="105" rx="35" ry="33"/><ellipse cx="185" cy="103" rx="36" ry="34"/><circle cx="129" cy="99" r="10" fill="#00ff00"/><circle cx="199" cy="96" r="10" fill="#00ff00"/><path d="M65 146 Q77 133 91 143 M209 141 Q224 131 238 144"/><path d="M88 184 Q128 167 160 181"/><path d="M213 253 L210 199 Q239 164 224 158 Q212 153 194 178 L187 205 Q173 192 166 206 L182 253"/><path d="M237 52 Q235 27 257 29 Q281 31 263 50 L253 59 M252 73 L252 76"/>
+</g></svg>
