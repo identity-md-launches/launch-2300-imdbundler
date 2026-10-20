@@ -42,6 +42,7 @@ contract MultiActorHandler is Test {
     uint256 public ghostLastFees;
     bool public ghostMonotonic = true;
     uint256 public trades;
+    uint256 public midSyncTrades;
 
     constructor(IMDBHook hook_, MockERC20 pair_) {
         hook = hook_;
@@ -148,6 +149,39 @@ contract MultiActorHandler is Test {
         _track();
     }
 
+    /// @dev A payer that syncs and prepays before swapping and settles after. Its real token flows must
+    /// equal the swap's deltas exactly: the hook may not take IMDB out of a pending settle() credit.
+    function midSyncTrade(bool buy, bool exactIn, bool syncToken, uint256 rawAmount, uint256 rawTicks, uint256 rawPay)
+        external
+    {
+        BatchRouter.Op[] memory ops = _midSyncOps(syncToken, _params(buy, exactIn, rawAmount, rawTicks), rawPay);
+        uint256[4] memory before =
+            [token.balanceOf(address(batch)), pair.balanceOf(address(batch)), hook.totalFeesIMD(), hook.totalBurned()];
+        BalanceDelta d = batch.run(key, ops)[1];
+        int256 t = pairFirst ? int256(d.amount1()) : int256(d.amount0());
+        assertEq(int256(token.balanceOf(address(batch))) - int256(before[0]), t, "mid-sync payer IMDB overcharged");
+        assertEq(int256(pair.balanceOf(address(batch))) - int256(before[1]), _pair(d), "mid-sync payer IMD mismatch");
+        _checkFee(buy, d, hook.totalFeesIMD() - before[2]);
+        if (syncToken) assertEq(hook.totalBurned(), before[3], "burned while IMDB was synced");
+        midSyncTrades++;
+        trades++;
+        _track();
+    }
+
+    function _midSyncOps(bool syncToken, SwapParams memory p, uint256 rawPay)
+        private
+        view
+        returns (BatchRouter.Op[] memory ops)
+    {
+        Currency synced = Currency.wrap(syncToken ? address(token) : address(pair));
+        uint256 cap = synced.balanceOf(address(batch)) / 4;
+        uint256 prepay = bound(rawPay, 0, cap < 200_000 ether ? cap : 200_000 ether);
+        ops = new BatchRouter.Op[](3);
+        ops[0] = BatchRouter.Op(BatchRouter.Kind.SyncAndPay, abi.encode(synced, prepay));
+        ops[1] = BatchRouter.Op(BatchRouter.Kind.Swap, abi.encode(p));
+        ops[2] = BatchRouter.Op(BatchRouter.Kind.Settle, "");
+    }
+
     function addLiquidity(uint256 rawCenter, uint256 rawWidth, uint256 rawLiquidity) external {
         (, int24 tick,,) = manager.getSlot0(key.toId());
         int256 center = (int256(tick) / 60) * 60 + (int256(bound(rawCenter, 0, 200)) - 100) * 60;
@@ -208,13 +242,14 @@ abstract contract MultiActorInvariants is HookFixture {
         token.transfer(address(handler), 50_000_000 ether);
         handler.fund();
         targetContract(address(handler));
-        bytes4[] memory selectors = new bytes4[](6);
+        bytes4[] memory selectors = new bytes4[](7);
         selectors[0] = MultiActorHandler.trade.selector;
         selectors[1] = MultiActorHandler.batchTrade.selector;
         selectors[2] = MultiActorHandler.addLiquidity.selector;
         selectors[3] = MultiActorHandler.removeLiquidity.selector;
         selectors[4] = MultiActorHandler.donateClaim.selector;
         selectors[5] = MultiActorHandler.process.selector;
+        selectors[6] = MultiActorHandler.midSyncTrade.selector;
         targetSelector(FuzzSelector(address(handler), selectors));
     }
 
