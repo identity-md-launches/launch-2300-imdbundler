@@ -37,7 +37,9 @@ The fee is minted as an IMD ERC-6909 claim on the hook. It is never transferred 
 
 The buyback limit is fixed at ±1% **square-root** price movement from the post-user-trade price (about 1.99% downward or 2.01% upward price movement). Limits are clamped inside TickMath bounds. At the terminal price, with no usable liquidity, or after hitting this bound, remaining IMD stays a claim. There is at most one buyback attempt per invocation; no keeper-supplied venue, price, payout, or unbounded processing queue.
 
-IMDB proceeds are first recorded as token claims. As many as the PoolManager can physically pay are redeemed to the hook and immediately burned through `IMDBToken.burn`. If a seller's token input has not settled yet, the manager can owe IMDB without currently possessing it. In that case, claims wait rather than making the user's swap fail. The next swap retries them. Anyone can call `processFees()` after the manager unlock has finished, including later in the same outer transaction. It unlocks the manager itself; only that manager may enter the guarded `unlockCallback`.
+The buyback is skipped entirely while the pool has **no liquidity at the current tick** (`getLiquidity(poolId) == 0`). v4 moves the price of an empty range straight to the swap's limit without consuming input, so without this check every permissionless `processFees()` call would shift `slot0` by the full bound at no cost and could walk the price into a distant range before spending the pending IMD there. With the check, pending IMD waits until a user's trade or new liquidity brings the current tick back in range. The check reads only the current tick's liquidity: a buyback that starts in range and runs off its end still moves the price to the bound, which is the ordinary cost-free price walk v4 allows any swapper through empty ranges.
+
+IMDB proceeds are first recorded as token claims. As many as the PoolManager can physically pay are redeemed to the hook and immediately burned through `IMDBToken.burn`, with one exception: when the PoolManager's synced currency is IMDB, the burn is deferred. A payer may `sync(IMDB)` and transfer its input before calling `swap()` and only `settle()` afterwards; `settle()` credits the growth of the manager's IMDB balance since the sync, so a `take` of IMDB inside the swap would shrink that credit by the burned amount and the payer would either fail with `CurrencyNotSettled` or pay the burn on top of its input. The hook reads `TransientStateLibrary.getSyncedCurrency` and leaves the purchased IMDB as a claim in that case. A payer that settles before the swap (a router's SETTLE then SWAP) and a buyer with IMD synced are unaffected and burn in the same flow. If a seller's token input has not settled yet, the manager can also owe IMDB without currently possessing it. In both cases, claims wait rather than making the user's swap fail or overcharging it. The next swap retries them. Anyone can call `processFees()` after the manager unlock has finished, including later in the same outer transaction. It unlocks the manager itself; only that manager may enter the guarded `unlockCallback`. Nobody has IMDB synced inside that unlock, so a retry always burns what the manager holds.
 
 Processing receives no reward. Deferred claims may persist without future liquidity or someone paying retry gas. They can never be diverted to a recipient or withdrawn by an owner.
 
@@ -51,7 +53,7 @@ For one callback fee `F`, total claim input `P`, buyback spend `S`, bought IMDB 
 | Burn claims for buyback | `+P` | 0 |
 | Buyback AMM swap | `-S` | `+T` |
 | Remint unsold IMD and purchased-token claims | `-(P-S)` | `-T` |
-| Burn redeemable token claims and take tokens | 0 | `+R-R = 0` |
+| Burn redeemable token claims and take tokens (skipped while IMDB is the synced currency) | 0 | `+R-R = 0` |
 | PoolManager credits returned hook fee | `+F` | 0 |
 | **Total** | **0** | **0** |
 

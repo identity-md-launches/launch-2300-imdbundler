@@ -69,6 +69,8 @@ The IMDB launch pool is **v4 paired with IMD**, not the site's v2 ETH route. Use
 
 The hook takes fees only on its one exact pool key. It buys IMDB with those fees in that same pool and destroys the purchased tokens using the token's caller-only `burn`. It does not convert fees to ETH or pay an owner: the brief specifically requests buyback and burn. This overrides the reference's generic ETH fee-payout behavior.
 
+The burn happens inside the user's swap whenever the PoolManager can pay it and no payer has IMDB synced for a pending settlement; otherwise the purchased IMDB waits as a claim and the next swap or a permissionless `processFees()` call burns it. The buyback itself is skipped while the pool has no liquidity at its current tick, so retries cannot move the price for free. Both rules were added in a revision after an external review; see [hook accounting](docs/HOOK.md).
+
 The factory, not either contract, applies the launch allocation: **10%** agent MerkleDistributor, **88%** liquidity, **2%** payer or policy treasury. The hook reserves no launch allocation. Opening price is the factory's responsibility, derived from its opening market-cap policy and final currency ordering. Tests use 1:1 for accounting coverage; that is not a deployment-price instruction.
 
 The initialization callback was added to validate the sole supported key and prevent preinitializing a predicted hook pool before its code exists. Liquidity callbacks are disabled: the factory can collect fees with zero liquidity change and remove its liquidity without hook taxes or gates.

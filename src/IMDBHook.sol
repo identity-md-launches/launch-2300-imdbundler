@@ -9,6 +9,7 @@ import {IPoolManager} from "v4-core/src/interfaces/IPoolManager.sol";
 import {IUnlockCallback} from "v4-core/src/interfaces/callback/IUnlockCallback.sol";
 import {Hooks} from "v4-core/src/libraries/Hooks.sol";
 import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
+import {TransientStateLibrary} from "v4-core/src/libraries/TransientStateLibrary.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
 import {Currency} from "v4-core/src/types/Currency.sol";
@@ -21,6 +22,7 @@ import {BeforeSwapDelta, toBeforeSwapDelta} from "v4-core/src/types/BeforeSwapDe
 /// actual fill before committing a specified return delta. The outer pool swap still executes.
 contract IMDBHook is HookBase, IUnlockCallback {
     using StateLibrary for IPoolManager;
+    using TransientStateLibrary for IPoolManager;
     using SafeCast for uint256;
     using SafeCast for int256;
 
@@ -206,7 +208,9 @@ contract IMDBHook is HookBase, IUnlockCallback {
         uint256 available = poolManager.balanceOf(address(this), pairId);
         uint256 maxAmount = (1 << 127) - 1;
         if (available > maxAmount) available = maxAmount;
-        if (available != 0) {
+        // With no liquidity at the current tick, a swap moves the price to its limit without spending anything.
+        // Skipping keeps a permissionless retry from walking the price, one bound per call, into a far range.
+        if (available != 0 && poolManager.getLiquidity(key.toId()) != 0) {
             (uint160 price,,,) = poolManager.getSlot0(key.toId());
             uint256 bound = pairIsCurrency0
                 ? uint256(price) * (10_000 - BUYBACK_SQRT_MOVE_BPS) / 10_000
@@ -235,6 +239,9 @@ contract IMDBHook is HookBase, IUnlockCallback {
         uint256 tokenId = uint256(uint160(address(token)));
         uint256 claim = poolManager.balanceOf(address(this), tokenId);
         if (claim == 0) return;
+        // settle() credits a payer with the balance growth since its sync(). Taking IMDB while a payer has IMDB
+        // synced would shrink that credit by the burned amount, so the burn waits until that settlement is done.
+        if (Currency.unwrap(poolManager.getSyncedCurrency()) == address(token)) return;
         uint256 balance = token.balanceOf(address(poolManager));
         uint256 amount = claim < balance ? claim : balance;
         if (amount == 0) return;

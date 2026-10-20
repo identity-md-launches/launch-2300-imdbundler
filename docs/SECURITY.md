@@ -7,7 +7,7 @@ This is an implementation review and test record, not an independent security au
 Normal checks require no network or secrets. Results on the delivered implementation:
 
 - `forge build`: succeeds with pinned Solidity 0.8.26 and Cancun.
-- `forge test`: **52 reported tests/groups passed**, no failures or skips. This includes 50 ordinary/fuzz tests and two invariant campaigns (two invariants each, grouped by this Foundry version).
+- `forge test`: **62 reported tests/groups passed**, no failures or skips. This includes 60 ordinary/fuzz tests and two invariant campaigns (two invariants each, grouped by this Foundry version).
 - Fuzz cases: 256 per fuzz test, including transfer/burn amounts, all trade directions and exactness modes, partial fills, and minor-unit rounding. The assignment's exact seed is in `foundry.toml`.
 - Stateful invariants: 64 × 32 = **2,048 calls per currency ordering**, all succeeding. Random trades and claim retries check fee conservation, total-supply reduction, settled deltas, and no retained ERC-20 fees. Across both campaigns: 4,096 calls.
 - `forge fmt --check`: succeeds.
@@ -29,6 +29,8 @@ The supplied protected floor checks were read as acceptance inputs. They are not
 | NoOp exposure | Before-swap returns only the calculated fee. The core still executes the trade. Fee cannot consume the entire exact input. Only-self quoting always reverts its effects. |
 | Exact fills and partial fills | All four combinations, both currency orderings, tight price-limit fills, empty liquidity, and dust inputs tested. afterSwap checks the real settled fee equation. |
 | Claims and cash availability | Token-only fresh manager buys succeed. IMD-only fresh manager sells defer token burns until actual input arrives. Bounded buyback leaves claims and permissionless retries make progress. No native balance is required. |
+| Mid-sync settlement | A seller that syncs and transfers IMDB before `swap()` and settles after it pays exactly its input (fixed test and fuzz, both orderings): the hook never takes IMDB while IMDB is the manager's synced currency and burns on the next retry instead. Controls: settling before the swap, and a buyer with IMD synced, still burn in the same flow. Revision after an external review (finding `841aea96…`). |
+| Empty-range retries | With pending IMD and zero in-range liquidity, repeated `processFees()` calls leave `slot0` and `pendingIMD` unchanged; once liquidity returns the retry spends. Revision after an external review (finding `03615ec5…`). |
 | Conservation | No open manager deltas at unlock exit; fee spend plus outstanding claims equals fee charges in the no-donation test model. Supply reduction matches burns in the no-other-holder-burn model. |
 | Reentrancy | `swapping` gates before/after phases; `processing` is set before fee processing and during permissionless unlock. The trusted manager's self-call bypass handles nested swaps; a public caller has no corresponding bypass. An adversarial manager-runtime test tries reentering processing and both swap callbacks during unlock; each is rejected, and the next legitimate processing call succeeds. |
 | Settlement rollback | If the trader cannot settle input, fees, claims, buyback, and burn all roll back atomically. |

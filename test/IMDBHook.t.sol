@@ -16,6 +16,7 @@ import {StateLibrary} from "v4-core/src/libraries/StateLibrary.sol";
 import {TransientStateLibrary} from "v4-core/src/libraries/TransientStateLibrary.sol";
 import {TickMath} from "v4-core/src/libraries/TickMath.sol";
 import {PoolKey} from "v4-core/src/types/PoolKey.sol";
+import {Currency} from "v4-core/src/types/Currency.sol";
 import {SwapParams} from "v4-core/src/types/PoolOperation.sol";
 import {BalanceDelta, BalanceDeltaLibrary} from "v4-core/src/types/BalanceDelta.sol";
 
@@ -91,6 +92,8 @@ abstract contract HookFixture is Test {
 }
 
 abstract contract HookBehavior is HookFixture {
+    using StateLibrary for IPoolManager;
+
     function test_permissionsAndInitialization() public {
         Hooks.Permissions memory p = hook.getHookPermissions();
         assertTrue(
@@ -228,6 +231,97 @@ abstract contract HookBehavior is HookFixture {
         hook.processFees();
         assertEq(hook.pendingIMDB(), 0);
         assertGt(hook.totalBurned(), 0);
+        assertSettled();
+    }
+
+    /// @dev A seller that syncs and transfers IMDB before swap() and settles after it pays exactly its input:
+    /// the hook must not take IMDB from the manager between that sync and settle. The burn waits for a retry.
+    function test_prepaidSellerPaysOnlyItsInputAndBurnDefers() public {
+        seed();
+        uint256 sold = 100 ether;
+        uint256 beforeToken = token.balanceOf(address(router));
+        uint256 beforePair = pair.balanceOf(address(router));
+        BalanceDelta delta =
+            router.swapPrepaid(key, params(false, true, sold, false), Currency.wrap(address(token)), sold, false);
+        int256 pairDelta = pairFirst() ? int256(delta.amount0()) : int256(delta.amount1());
+        assertEq(beforeToken - token.balanceOf(address(router)), sold, "seller funded the burn");
+        assertEq(pair.balanceOf(address(router)) - beforePair, uint256(pairDelta));
+        assertEq(hook.totalFeesIMD(), (uint256(pairDelta) + hook.totalFeesIMD()) / 50);
+        assertGt(hook.totalBuybackIMD(), 0);
+        assertGt(hook.pendingIMDB(), 0);
+        assertEq(hook.totalBurned(), 0);
+        assertSettled();
+        vm.prank(makeAddr("keeper"));
+        hook.processFees();
+        assertEq(hook.pendingIMDB(), 0);
+        assertGt(hook.totalBurned(), 0);
+        assertSettled();
+    }
+
+    function testFuzz_prepaidSellerPaysOnlyItsInput(uint96 amount, bool exactIn) public {
+        seed();
+        uint256 sold = bound(amount, 0.01 ether, 100000 ether);
+        uint256 beforeToken = token.balanceOf(address(router));
+        Currency tokenCurrency = Currency.wrap(address(token));
+        BalanceDelta delta =
+            router.swapPrepaid(key, params(false, exactIn, sold, false), tokenCurrency, sold * 2, false);
+        int256 tokenDelta = pairFirst() ? int256(delta.amount1()) : int256(delta.amount0());
+        assertEq(beforeToken - token.balanceOf(address(router)), uint256(-tokenDelta));
+        if (exactIn) assertEq(uint256(-tokenDelta), sold);
+        assertEq(hook.totalBurned(), 0);
+        assertSettled();
+        hook.processFees();
+        assertGt(hook.totalBurned(), 0);
+        assertSettled();
+    }
+
+    /// @dev Settling the prepaid input before the swap, as a router's SETTLE then SWAP does, burns in the same flow.
+    function test_sellerSettledBeforeSwapBurnsInFlow() public {
+        seed();
+        uint256 sold = 100 ether;
+        uint256 beforeToken = token.balanceOf(address(router));
+        router.swapPrepaid(key, params(false, true, sold, false), Currency.wrap(address(token)), sold, true);
+        assertEq(beforeToken - token.balanceOf(address(router)), sold);
+        assertGt(hook.totalBurned(), 0);
+        assertEq(hook.pendingIMDB(), 0);
+        assertSettled();
+    }
+
+    /// @dev A buyer with IMD synced is unaffected: the hook never takes IMD, so the burn still happens in flow.
+    function test_prepaidBuyerStillBurnsInFlow() public {
+        seed();
+        uint256 budget = 100 ether;
+        uint256 beforePair = pair.balanceOf(address(router));
+        router.swapPrepaid(key, params(true, true, budget, false), Currency.wrap(IMD), budget, false);
+        assertEq(beforePair - pair.balanceOf(address(router)), budget);
+        assertEq(hook.totalFeesIMD(), budget / 50);
+        assertGt(hook.totalBurned(), 0);
+        assertEq(hook.pendingIMDB(), 0);
+        assertSettled();
+    }
+
+    /// @dev With no in-range liquidity a swap would move the price to its limit for free; the retry must not.
+    function test_retryWithoutInRangeLiquidityLeavesPriceAlone() public {
+        seed();
+        router.swap(key, params(true, true, 20_000_000 ether, false));
+        uint256 pending = hook.pendingIMD();
+        assertGt(pending, 0);
+        router.modify(key, -887220, 887220, -int256(1_000_000 ether));
+        assertEq(manager.getLiquidity(key.toId()), 0);
+        (uint160 priceBefore,,,) = manager.getSlot0(key.toId());
+        uint256 spentBefore = hook.totalBuybackIMD();
+        for (uint256 i; i < 3; ++i) {
+            hook.processFees();
+        }
+        (uint160 priceAfter,,,) = manager.getSlot0(key.toId());
+        assertEq(priceAfter, priceBefore);
+        assertEq(hook.pendingIMD(), pending);
+        assertEq(hook.totalBuybackIMD(), spentBefore);
+        assertSettled();
+        seed();
+        hook.processFees();
+        assertLt(hook.pendingIMD(), pending);
+        assertGt(hook.totalBuybackIMD(), spentBefore);
         assertSettled();
     }
 
